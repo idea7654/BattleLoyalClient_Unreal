@@ -20,6 +20,8 @@ ASCharacter::ASCharacter()
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
+
+	socket = ClientSocket::GetSingleton();
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +29,8 @@ void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	socket->Begin();
+	socket->Bind();
 }
 
 void ASCharacter::BeginCrouch()
@@ -65,9 +69,21 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ASCharacter::MoveForward(float Value)
 {
 	AddMovementInput(GetActorForwardVector() * Value);
+	
+	socket->WriteTo();
 }
 
 void ASCharacter::MoveRight(float Value)
 {
 	AddMovementInput(GetActorRightVector() * Value);
+}
+
+FVector ASCharacter::GetPawnViewLocation() const
+{
+	if (CameraComp)
+	{
+		return CameraComp->GetComponentLocation();
+	}
+
+	return Super::GetPawnViewLocation();
 }

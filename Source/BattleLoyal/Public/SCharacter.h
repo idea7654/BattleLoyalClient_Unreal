@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "ClientSocket.h"
 #include "SCharacter.generated.h"
 
 class UCameraComponent;
@@ -41,4 +42,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual FVector GetPawnViewLocation() const override;
+
+private:
+	ClientSocket *socket;
 };
