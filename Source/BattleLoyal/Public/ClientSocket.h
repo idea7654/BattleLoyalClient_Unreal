@@ -10,7 +10,7 @@
 #include "Runtime/Core/Public/HAL/Runnable.h"
 
 #define	MAX_BUFFER_LENGTH	1024
-#define SERVER_PORT			8000
+#define SERVER_PORT			9999
 #define SERVER_IP			"203.250.133.43"
 
 class cCharacter {
@@ -70,12 +70,15 @@ public:
 	bool RecvFrom();
 	bool WriteTo(BYTE* data, DWORD dataLength);
 	bool WriteTo();
+	SOCKET GetSocket();
 
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];
 	char			mWriteBuffer[MAX_BUFFER_LENGTH];
 	SOCKET			mSocket;
-	SOCKADDR_IN		mUdpRemoteInfo;
 	SOCKADDR_IN		mServerInfo;
 	WSADATA			mWsaData;
+
+public:
+	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
 };

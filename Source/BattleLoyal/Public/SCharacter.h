@@ -45,5 +45,5 @@ public:
 	virtual FVector GetPawnViewLocation() const override;
 
 private:
-	ClientSocket *socket;
+	ClientSocket *Socket;
 };

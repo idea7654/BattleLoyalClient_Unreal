@@ -21,21 +21,24 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
-	socket = ClientSocket::GetSingleton();
+	Socket = ClientSocket::GetSingleton();
 }
 
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	socket->Begin();
-	socket->Bind();
 }
 
 void ASCharacter::BeginCrouch()
 {
 	Crouch();
+	if (Socket)
+	{
+		int32 packetSize = 0;
+		uint8_t* packet = Socket->WRITE_PU_C2S_REQUEST_LOGIN("test1234@naver.com", "1234", packetSize);
+		Socket->WriteTo(packet, packetSize);
+	}
 }
 
 void ASCharacter::EndCrouch()
@@ -69,8 +72,6 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ASCharacter::MoveForward(float Value)
 {
 	AddMovementInput(GetActorForwardVector() * Value);
-	
-	socket->WriteTo();
 }
 
 void ASCharacter::MoveRight(float Value)
