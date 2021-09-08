@@ -5,10 +5,10 @@
 
 void ABattleLoyalGameModeBase::BeginPlay()
 {
-	Socket = ClientSocket::GetSingleton();
-	Socket->Begin();
-	Socket->Bind();
-	Socket->StartListen();
+	//Socket = ClientSocket::GetSingleton();
+	//Socket->Begin();
+	//Socket->Bind();
+	//Socket->StartListen();
 	/*if (!isSuccess)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Error"));

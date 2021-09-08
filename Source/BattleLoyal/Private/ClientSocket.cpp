@@ -3,8 +3,7 @@
 
 #include "ClientSocket.h"
 #include "UdpProtocol.h"
-
-static flatbuffers::FlatBufferBuilder builder(1024);
+#include "LoginWidget.h"
 
 ClientSocket::ClientSocket() :StopTaskCounter(0)
 {
@@ -13,7 +12,7 @@ ClientSocket::ClientSocket() :StopTaskCounter(0)
 
 ClientSocket::~ClientSocket()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Destructor"));
+	//UE_LOG(LogTemp, Warning, TEXT("Destructor"));
 	delete Thread;
 	Thread = nullptr;
 
@@ -28,10 +27,10 @@ bool ClientSocket::Init()
 
 uint32 ClientSocket::Run()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Start Thread"));
+	//UE_LOG(LogTemp, Warning, TEXT("Start Thread"));
 	FPlatformProcess::Sleep(0.03);
 	
-	while (StopTaskCounter.GetValue() == 0)
+	while (StopTaskCounter.GetValue() == 0 && isStart)
 	{
 		RecvFrom();
 	}
@@ -85,7 +84,7 @@ bool ClientSocket::Begin()
 		WSACleanup();
 		return false;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Init Finish"));
+	//UE_LOG(LogTemp, Warning, TEXT("Init Finish"));
 	return true;
 }
 
@@ -107,17 +106,36 @@ bool ClientSocket::RecvFrom()
 		return false;
 	int32 clientSize = sizeof(mServerInfo);
 	int32 recvLen = 0;
-
 	if ((recvLen = recvfrom(mSocket, mReadBuffer, sizeof(mReadBuffer) - 1, 0, (SOCKADDR*)&mServerInfo, &clientSize)) == -1)
 		return false;
+	//UE_LOG(LogTemp, Warning, TEXT("%d"), recvLen);
 	char* remoteAddress = inet_ntoa(mServerInfo.sin_addr);
 	int32 remotePort = htons(mServerInfo.sin_port);
 
 	int32 PacketLength = 0;
 	::memcpy(&PacketLength, mReadBuffer, sizeof(int32));
-	//UE_LOG(LogTemp, Log, TEXT("Packet Come!"));
 
-	UE_LOG(LogTemp, Warning, TEXT("Recv!!"));
+	int32 PacketNumber = 0;
+	::memcpy(&PacketNumber, mReadBuffer + sizeof(int32), sizeof(int32));
+
+	char packet[MAX_BUFFER_LENGTH];
+	::memcpy(&packet, mReadBuffer + sizeof(int32) * 2, PacketLength);
+
+	auto message = GetMessage(packet);
+	auto protocol = message->packet_type();
+
+	switch (protocol)
+	{
+	case MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN:
+	{
+		//로그인 성공
+		UE_LOG(LogTemp, Warning, TEXT("Complete Login"));
+		break;
+	}
+
+	default:
+		break;
+	}
 
 	return true;
 }
@@ -126,14 +144,14 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 {
 	if (!mSocket)
 		return false;
-
+	
 	char SendBuffer[MAX_BUFFER_LENGTH];
 	memset(SendBuffer, 0, sizeof(SendBuffer));
-	DWORD PacketLength = sizeof(DWORD) * 2 + dataLength;
-	int32 PacketNumber = 2;
+	int32 PacketLength = sizeof(int32) * 2 + dataLength;
+	mPacketNumber++;
 
 	memcpy(SendBuffer, &PacketLength, sizeof(int32));
-	memcpy(SendBuffer + sizeof(int32), &PacketNumber, sizeof(int32));
+	memcpy(SendBuffer + sizeof(int32), &mPacketNumber, sizeof(int32));
 	memcpy(SendBuffer + sizeof(int32) * 2, data, dataLength);
 
 	if (mServerInfo.sin_port != 0)
@@ -147,51 +165,54 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 	return true;
 }
 
-bool ClientSocket::WriteTo()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Init Write!"));
-
-	if (!mSocket)
-		return false;
-
-	UE_LOG(LogTemp, Warning, TEXT("Send Packet!"));
-	char SendBuffer[MAX_BUFFER_LENGTH];
-	memset(SendBuffer, 0, sizeof(SendBuffer));
-	int32 PacketLength = 7654;
-	//int32 PacketNumber = 1;
-
-	memcpy(SendBuffer, &PacketLength, sizeof(int32));
-
-	int32 asdf = 0;
-	memcpy(&asdf, SendBuffer, sizeof(int32));
-
-	if (mServerInfo.sin_port != 0)
-	{
-		int32 returnVal = sendto(mSocket, SendBuffer, sizeof(int32), 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
-		UE_LOG(LogTemp, Warning, TEXT("%d"), returnVal);
-		if (returnVal < 0)
-			return false;
-	}
-	
-	return true;
-}
+//bool ClientSocket::WriteTo()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("Init Write!"));
+//
+//	if (!mSocket)
+//		return false;
+//
+//	char SendBuffer[MAX_BUFFER_LENGTH];
+//	memset(SendBuffer, 0, sizeof(SendBuffer));
+//	int32 PacketLength = 7654;
+//	//int32 PacketNumber = 1;
+//
+//	memcpy(SendBuffer, &PacketLength, sizeof(int32));
+//
+//	int32 asdf = 0;
+//	memcpy(&asdf, SendBuffer, sizeof(int32));
+//
+//	if (mServerInfo.sin_port != 0)
+//	{
+//		int32 returnVal = sendto(mSocket, SendBuffer, sizeof(int32), 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
+//		UE_LOG(LogTemp, Warning, TEXT("%d"), returnVal);
+//		if (returnVal < 0)
+//			return false;
+//	}
+//	
+//	return true;
+//}
 
 SOCKET ClientSocket::GetSocket()
 {
 	return mSocket;
 }
 
+//static flatbuffers::FlatBufferBuilder builder(1024);
+
 inline uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)
 {
+	flatbuffers::FlatBufferBuilder builder;
 	auto userEmail = builder.CreateString(email);
 	auto userPassword = builder.CreateString(password);
 	auto makePacket = CreateC2S_REQUEST_LOGIN(builder, userEmail, userPassword);
-	auto packet = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_REQUEST_LOGIN, makePacket.Union());
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_REQUEST_LOGIN, makePacket.Union());
 
-	builder.Finish(packet);
+	builder.Finish(newPacket);
 	refLength = builder.GetSize();
 
-	auto data = builder.GetBufferPointer();
+	const auto data = builder.GetBufferPointer();
 	builder.Clear();
+
 	return data;
 }

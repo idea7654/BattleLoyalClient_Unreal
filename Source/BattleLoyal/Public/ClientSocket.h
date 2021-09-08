@@ -70,6 +70,7 @@ public:
 	bool RecvFrom();
 	bool WriteTo(BYTE* data, DWORD dataLength);
 	bool WriteTo();
+	bool isStart;
 	SOCKET GetSocket();
 
 private:
@@ -78,7 +79,8 @@ private:
 	SOCKET			mSocket;
 	SOCKADDR_IN		mServerInfo;
 	WSADATA			mWsaData;
-
+	int32			mPacketNumber = 2;
 public:
 	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
 };
+

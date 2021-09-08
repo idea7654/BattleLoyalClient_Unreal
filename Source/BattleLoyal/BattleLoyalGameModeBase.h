@@ -20,6 +20,6 @@ public:
 	virtual void BeginPlay() override;
 
 public:
-	ClientSocket * Socket;
+	//ClientSocket * Socket;
 	
 };
