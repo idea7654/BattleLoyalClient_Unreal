@@ -18,7 +18,7 @@ class BATTLELOYAL_API ULoginWidget : public UUserWidget
 public:
 	ClientSocket *Socket;
 	
-protected:
+public:
 	UPROPERTY(meta = (BindWidget))
 	class UEditableTextBox *Email;
 
@@ -31,8 +31,19 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	class UButton *RegisterButton;
 
+	UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox *NotifyUI;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation *Notification_Anim;
+
 	UFUNCTION()
 	void OnClickedLogin();
 
+	UFUNCTION()
+	void LoginError();
+
 	void NativeConstruct() override;
+
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 };

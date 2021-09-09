@@ -37,6 +37,8 @@ public:
 	float	HP;
 };
 
+DECLARE_DELEGATE(FLogin_Error);
+
 class BATTLELOYAL_API ClientSocket : public FRunnable
 {
 public:
@@ -64,14 +66,19 @@ public:
 		return &ins;
 	}
 
+	FLogin_Error Func_Login_Error;
+
 public:
-	bool Begin();
-	bool Bind();
-	bool RecvFrom();
-	bool WriteTo(BYTE* data, DWORD dataLength);
-	bool WriteTo();
-	bool isStart;
-	SOCKET GetSocket();
+	bool			Begin();
+	bool			Bind();
+	bool			RecvFrom();
+	bool			WriteTo(BYTE* data, DWORD dataLength);
+	bool			isStart = false;
+	bool			isMatching = false;
+	SOCKET			GetSocket();
+	
+public:
+	bool			isLoginError = false;
 
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];

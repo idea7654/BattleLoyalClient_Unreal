@@ -132,6 +132,12 @@ bool ClientSocket::RecvFrom()
 		UE_LOG(LogTemp, Warning, TEXT("Complete Login"));
 		break;
 	}
+	case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
+	{
+		//LoginWidget::LoginError();
+		//if (Func_Login_Error.IsBound() == true) Func_Login_Error.Execute();
+		isLoginError = true;
+	}
 
 	default:
 		break;
@@ -152,11 +158,12 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 
 	memcpy(SendBuffer, &PacketLength, sizeof(int32));
 	memcpy(SendBuffer + sizeof(int32), &mPacketNumber, sizeof(int32));
+	UE_LOG(LogTemp, Warning, TEXT("%d"), dataLength);
 	memcpy(SendBuffer + sizeof(int32) * 2, data, dataLength);
 
 	if (mServerInfo.sin_port != 0)
 	{
-		int32 returnVal = sendto(mSocket, SendBuffer, dataLength, 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
+		int32 returnVal = sendto(mSocket, SendBuffer, PacketLength, 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
 		UE_LOG(LogTemp, Warning, TEXT("%d"), returnVal);
 		if (returnVal < 0)
 			return false;
@@ -164,34 +171,6 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 
 	return true;
 }
-
-//bool ClientSocket::WriteTo()
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("Init Write!"));
-//
-//	if (!mSocket)
-//		return false;
-//
-//	char SendBuffer[MAX_BUFFER_LENGTH];
-//	memset(SendBuffer, 0, sizeof(SendBuffer));
-//	int32 PacketLength = 7654;
-//	//int32 PacketNumber = 1;
-//
-//	memcpy(SendBuffer, &PacketLength, sizeof(int32));
-//
-//	int32 asdf = 0;
-//	memcpy(&asdf, SendBuffer, sizeof(int32));
-//
-//	if (mServerInfo.sin_port != 0)
-//	{
-//		int32 returnVal = sendto(mSocket, SendBuffer, sizeof(int32), 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
-//		UE_LOG(LogTemp, Warning, TEXT("%d"), returnVal);
-//		if (returnVal < 0)
-//			return false;
-//	}
-//	
-//	return true;
-//}
 
 SOCKET ClientSocket::GetSocket()
 {

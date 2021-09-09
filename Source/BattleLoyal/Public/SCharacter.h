@@ -35,7 +35,19 @@ protected:
 	UPROPERTY(VIsibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent *SpringArmComp;
 
-public:	
+	bool bWantsToZoom;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	float ZoomedFOV;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
+	float ZoomInterpSpeed;
+	/* Default FOV set during begin play*/
+	float DefaultFOV;
+
+	void BeginZoom();
+	void EndZoom();
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
