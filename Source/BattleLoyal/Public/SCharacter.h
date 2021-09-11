@@ -9,6 +9,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ASWeapon;
 
 UCLASS()
 class BATTLELOYAL_API ASCharacter : public ACharacter
@@ -47,6 +48,17 @@ protected:
 
 	void BeginZoom();
 	void EndZoom();
+
+	ASWeapon *CurrentWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TSubclassOf<ASWeapon> StarterWeaponClass;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName WeaponAttachSocketName;
+
+	void StartFire();
+	void StopFire();
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

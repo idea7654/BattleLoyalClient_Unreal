@@ -4,9 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "ClientSocket.h"
 #include "LobbyWidget.generated.h"
-
-
 /**
  * 
  */
@@ -17,4 +16,19 @@ class BATTLELOYAL_API ULobbyWidget : public UUserWidget
 	
 public:
 	void NativeConstruct() override;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock *Nickname;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock *MatchingText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton *MatchingButton;
+
+	ClientSocket *Socket;
+
+protected:
+	UFUNCTION()
+	void OnClickedMatching();
 };

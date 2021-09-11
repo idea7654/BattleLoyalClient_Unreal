@@ -128,15 +128,19 @@ bool ClientSocket::RecvFrom()
 	{
 	case MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN:
 	{
-		//로그인 성공
-		UE_LOG(LogTemp, Warning, TEXT("Complete Login"));
+		auto RecvData = static_cast<const S2C_COMPLETE_LOGIN*>(message->packet());
+		Nickname = RecvData->nickname()->c_str();
+		isLoginSuccess = true;
 		break;
 	}
 	case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
 	{
-		//LoginWidget::LoginError();
-		//if (Func_Login_Error.IsBound() == true) Func_Login_Error.Execute();
 		isLoginError = true;
+		break;
+	}
+	case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
+	{
+		break;
 	}
 
 	default:
@@ -177,15 +181,47 @@ SOCKET ClientSocket::GetSocket()
 	return mSocket;
 }
 
-//static flatbuffers::FlatBufferBuilder builder(1024);
+static flatbuffers::FlatBufferBuilder builder(1024);
 
 inline uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)
 {
-	flatbuffers::FlatBufferBuilder builder;
+	//flatbuffers::FlatBufferBuilder builder;
 	auto userEmail = builder.CreateString(email);
 	auto userPassword = builder.CreateString(password);
 	auto makePacket = CreateC2S_REQUEST_LOGIN(builder, userEmail, userPassword);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_REQUEST_LOGIN, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+inline uint8_t* ClientSocket::WRITE_PU_C2S_START_MATCHING(int32 &refLength)
+{
+	if (Nickname == "")	return NULL;
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_START_MATCHING(builder, userNick);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_START_MATCHING, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+inline uint8_t* ClientSocket::WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength)
+{
+	if (Nickname == "")	return NULL;
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_CANCEL_MATCHING(builder, userNick);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_CANCEL_MATCHING, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

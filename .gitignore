@@ -56,6 +56,8 @@ Binaries/*
 # Builds
 Build/*
 
+Content/PhotoR_Backgrounds
+
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/
 Build/*/**

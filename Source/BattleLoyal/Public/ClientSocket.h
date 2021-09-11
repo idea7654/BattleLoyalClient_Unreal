@@ -73,12 +73,14 @@ public:
 	bool			Bind();
 	bool			RecvFrom();
 	bool			WriteTo(BYTE* data, DWORD dataLength);
-	bool			isStart = false;
-	bool			isMatching = false;
 	SOCKET			GetSocket();
 	
-public:
+public: //For Game Thread
 	bool			isLoginError = false;
+	bool			isLoginSuccess = false;
+	bool			isMatching = false;
+	bool			isStart = false;
+	std::string		Nickname;
 
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];
@@ -89,5 +91,7 @@ private:
 	int32			mPacketNumber = 2;
 public:
 	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
+	uint8_t*		WRITE_PU_C2S_START_MATCHING(int32 &refLength);
+	uint8_t*		WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength);
 };
 

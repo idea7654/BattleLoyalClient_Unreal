@@ -6,6 +6,7 @@
 #include "Components/EditableTextBox.h"
 #include "ClientSocket.h"
 #include "Animation/WidgetAnimation.h"
+#include "Kismet/GameplayStatics.h"
 
 void ULoginWidget::NativeConstruct()
 {
@@ -55,5 +56,11 @@ void ULoginWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		LoginError();
 		Socket->isLoginError = false;
+		
+	}
+	if (Socket->isLoginSuccess)
+	{
+		Socket->isLoginSuccess = false;
+		UGameplayStatics::OpenLevel(this, TEXT("Lobby_Sample"));
 	}
 }

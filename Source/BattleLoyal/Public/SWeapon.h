@@ -9,6 +9,7 @@
 class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
+class UCameraShakeBase;
 
 UCLASS()
 class BATTLELOYAL_API ASWeapon : public AActor
@@ -26,8 +27,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USkeletalMeshComponent *MeshComp;
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void Fire();
+	void PlayFireEffects(FVector TraceEnd);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;
@@ -42,13 +42,34 @@ protected:
 	UParticleSystem *MuzzleEffect; 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	UParticleSystem *ImpactEffect;
+	UParticleSystem *DefaultImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UParticleSystem *FleshImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UParticleSystem *TracerEffect;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<UCameraShakeBase> FireCamShake;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float BaseDamage;
+
+	void Fire();
+
+	FTimerHandle TimerHandle_TimeBetweenShots;
+
+	float LastFireTime;
+
+	/* RPM */
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float RateOfFire;
+
+	float TimeBetweenShots;
+public:
+	//UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void StartFire();
+
+	void StopFire();
 };
