@@ -12,7 +12,8 @@ void ULoginWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	LoginButton->OnClicked.AddDynamic(this, &ULoginWidget::OnClickedLogin);
-	
+	Password->SetIsPassword(true);
+
 	Socket = ClientSocket::GetSingleton();
 	Socket->Begin();
 	Socket->Bind();
