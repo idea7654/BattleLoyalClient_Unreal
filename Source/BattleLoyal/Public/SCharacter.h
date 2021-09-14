@@ -36,6 +36,8 @@ protected:
 	UPROPERTY(VIsibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent *SpringArmComp;
 
+	class USHealthComponent* HealthComp;
+
 	bool bWantsToZoom;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -59,6 +61,11 @@ protected:
 
 	void StartFire();
 	void StopFire();
+
+	UFUNCTION()
+	void OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	
+	bool bDied;
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
