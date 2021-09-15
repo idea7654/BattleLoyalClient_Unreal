@@ -20,8 +20,6 @@ void ULoginWidget::NativeConstruct()
 	Socket->isStart = true;
 	Socket->StartListen();
 
-	Socket->Func_Login_Error.BindUFunction(this, FName("LoginError"));
-
 	NotifyUI->SetRenderOpacity(0.0f);
 }
 

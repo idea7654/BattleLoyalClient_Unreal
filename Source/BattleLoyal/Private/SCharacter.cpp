@@ -41,6 +41,9 @@ void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FVector Destination = FVector(-816.959778f, -27386.173828f, 288.368652f);
+	TeleportTo(Destination, FRotator::ZeroRotator);
+
 	DefaultFOV = CameraComp->FieldOfView;
 	//Spawn a default weapon
 	FActorSpawnParameters SpawnParams;
@@ -92,7 +95,7 @@ void ASCharacter::StopFire()
 	}
 }
 
-void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASCharacter::OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0.0f && !bDied)
 	{
@@ -100,7 +103,10 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float Health, f
 		bDied = true;
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(10.0f);
 	}
 }
 

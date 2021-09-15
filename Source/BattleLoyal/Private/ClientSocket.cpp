@@ -3,6 +3,7 @@
 
 #include "ClientSocket.h"
 #include "UdpProtocol.h"
+#include "Kismet/GameplayStatics.h"
 #include "LoginWidget.h"
 
 ClientSocket::ClientSocket() :StopTaskCounter(0)
@@ -140,6 +141,10 @@ bool ClientSocket::RecvFrom()
 	}
 	case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
 	{
+		//LoadNextLevel
+		GameStart(message);
+		SendReliable();
+
 		break;
 	}
 
@@ -182,6 +187,38 @@ SOCKET ClientSocket::GetSocket()
 }
 
 static flatbuffers::FlatBufferBuilder builder(1024);
+
+void ClientSocket::SendReliable()
+{
+	char AckByte[4];
+	int32 Ack = 8888;
+	memset(AckByte, 0, sizeof(AckByte));
+	memcpy(AckByte, &Ack, sizeof(int32));
+	int32 returnVal = sendto(mSocket, AckByte, sizeof(AckByte), 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
+}
+
+void ClientSocket::GameStart(const Message *packetMessage)
+{
+	auto RecvData = static_cast<const S2C_GAME_START*>(packetMessage->packet());
+	auto userLength = RecvData->userdata()->Length();
+	auto gunLength = RecvData->gundata()->Length();
+
+	for (int32 i = 0; i < (int32)userLength; i++)
+	{
+		TSharedPtr<sCharacter> chara = TSharedPtr<sCharacter>();
+		chara->X = RecvData->userdata()->Get(i)->pos()->x();
+		chara->Y = RecvData->userdata()->Get(i)->pos()->y();
+		chara->Z = RecvData->userdata()->Get(i)->pos()->z();
+		chara->Nickname = RecvData->userdata()->Get(i)->nickname()->str();
+
+		players.Add(chara);
+		/*if (RecvData->userdata()->Get(i)->nickname()->str() == Nickname)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Its me!"));
+		}*/
+	}
+	isPlayers = true;
+}
 
 inline uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)
 {
