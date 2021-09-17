@@ -7,7 +7,6 @@
 #include "ClientSocket.h"
 #include "SCharacter.h"
 #include "BPlayerController.generated.h"
-
 /**
  * 
  */
@@ -18,16 +17,29 @@ class BATTLELOYAL_API ABPlayerController : public APlayerController
 	
 public:
 	ABPlayerController();
+	~ABPlayerController();
 
-	UPROPERTY(EditAnywhere, Category = "Spawn")
-	TSubclassOf<class ACharacter> Spawns;
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TSubclassOf<class ACharacter> WhoToSpawn;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	FName LevelName = FName(TEXT("GameLevel"));
+
+	UPROPERTY(BlueprintReadWrite, Category = "Spawning")
+	ASCharacter* SpawnedCharacter;
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Spawning")
 	void SetPlayers();
+
+	void SetNextLevel();
+
+	struct FTimerHandle		Timer;
+	void					ResetSessionTime();
+
 private:
 	ClientSocket	*Socket;
 	

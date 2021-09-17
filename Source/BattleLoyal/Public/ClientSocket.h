@@ -73,16 +73,20 @@ public:
 	bool			RecvFrom();
 	bool			WriteTo(BYTE* data, DWORD dataLength);
 	SOCKET			GetSocket();
-	
+	void			ResetTimeSession();
+
 public: //For Game Thread
 	bool								isLoginError = false;
 	bool								isLoginSuccess = false;
 	bool								isMatching = false;
 	bool								isStart = false;
 	std::string							Nickname;			
-	TArray<TSharedPtr<sCharacter>>		players;
-	bool								isPlayers = false;
 
+	UPROPERTY(VisibleAnywhere, Category = "Spawning")
+	TArray<TSharedPtr<sCharacter>>		players;
+
+	bool								isPlayers = false;
+	
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];
 	char			mWriteBuffer[MAX_BUFFER_LENGTH];
@@ -97,5 +101,6 @@ public:
 	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_START_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength);
+	uint8_t*		WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength);
 };
 

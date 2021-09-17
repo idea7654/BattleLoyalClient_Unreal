@@ -142,9 +142,8 @@ bool ClientSocket::RecvFrom()
 	case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
 	{
 		//LoadNextLevel
-		GameStart(message);
 		SendReliable();
-
+		GameStart(message);
 		break;
 	}
 
@@ -186,6 +185,13 @@ SOCKET ClientSocket::GetSocket()
 	return mSocket;
 }
 
+void ClientSocket::ResetTimeSession()
+{
+	int32 size = 0;
+	uint8_t* packet = WRITE_PU_C2S_EXTEND_SESSION(size);
+	WriteTo(packet, size);
+}
+
 static flatbuffers::FlatBufferBuilder builder(1024);
 
 void ClientSocket::SendReliable()
@@ -202,10 +208,10 @@ void ClientSocket::GameStart(const Message *packetMessage)
 	auto RecvData = static_cast<const S2C_GAME_START*>(packetMessage->packet());
 	auto userLength = RecvData->userdata()->Length();
 	auto gunLength = RecvData->gundata()->Length();
-
+	
 	for (int32 i = 0; i < (int32)userLength; i++)
 	{
-		TSharedPtr<sCharacter> chara = TSharedPtr<sCharacter>();
+		TSharedPtr<sCharacter> chara (new sCharacter());
 		chara->X = RecvData->userdata()->Get(i)->pos()->x();
 		chara->Y = RecvData->userdata()->Get(i)->pos()->y();
 		chara->Z = RecvData->userdata()->Get(i)->pos()->z();
@@ -220,7 +226,7 @@ void ClientSocket::GameStart(const Message *packetMessage)
 	isPlayers = true;
 }
 
-inline uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)
+uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)
 {
 	//flatbuffers::FlatBufferBuilder builder;
 	auto userEmail = builder.CreateString(email);
@@ -237,7 +243,7 @@ inline uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std:
 	return data;
 }
 
-inline uint8_t* ClientSocket::WRITE_PU_C2S_START_MATCHING(int32 &refLength)
+uint8_t* ClientSocket::WRITE_PU_C2S_START_MATCHING(int32 &refLength)
 {
 	if (Nickname == "")	return NULL;
 	auto userNick = builder.CreateString(Nickname);
@@ -253,12 +259,28 @@ inline uint8_t* ClientSocket::WRITE_PU_C2S_START_MATCHING(int32 &refLength)
 	return data;
 }
 
-inline uint8_t* ClientSocket::WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength)
+uint8_t* ClientSocket::WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength)
 {
 	if (Nickname == "")	return NULL;
 	auto userNick = builder.CreateString(Nickname);
 	auto makePacket = CreateC2S_CANCEL_MATCHING(builder, userNick);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_CANCEL_MATCHING, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t *ClientSocket::WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength)
+{
+	if (Nickname == "")	return NULL;
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_EXTEND_SESSION(builder, userNick);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_EXTEND_SESSION, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

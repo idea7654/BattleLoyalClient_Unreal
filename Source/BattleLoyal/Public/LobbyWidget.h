@@ -5,10 +5,12 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ClientSocket.h"
+#include "BPlayerController.h"
 #include "LobbyWidget.generated.h"
 /**
  * 
  */
+
 UCLASS()
 class BATTLELOYAL_API ULobbyWidget : public UUserWidget
 {
@@ -27,8 +29,7 @@ public:
 	class UButton *MatchingButton;
 
 	ClientSocket *Socket;
-
-protected:
+public:
 	UFUNCTION()
 	void OnClickedMatching();
 };

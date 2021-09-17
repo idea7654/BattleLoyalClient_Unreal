@@ -41,8 +41,8 @@ void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FVector Destination = FVector(-816.959778f, -27386.173828f, 288.368652f);
-	TeleportTo(Destination, FRotator::ZeroRotator);
+	//FVector Destination = FVector(-816.959778f, -27386.173828f, 288.368652f);
+	//TeleportTo(Destination, FRotator::ZeroRotator);
 
 	DefaultFOV = CameraComp->FieldOfView;
 	//Spawn a default weapon

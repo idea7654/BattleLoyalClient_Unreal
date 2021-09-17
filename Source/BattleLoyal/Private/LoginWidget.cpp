@@ -57,9 +57,4 @@ void ULoginWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		Socket->isLoginError = false;
 		
 	}
-	if (Socket->isLoginSuccess)
-	{
-		Socket->isLoginSuccess = false;
-		UGameplayStatics::OpenLevel(this, TEXT("Lobby_Sample"));
-	}
 }
