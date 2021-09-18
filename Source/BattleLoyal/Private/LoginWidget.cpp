@@ -15,10 +15,6 @@ void ULoginWidget::NativeConstruct()
 	Password->SetIsPassword(true);
 
 	Socket = ClientSocket::GetSingleton();
-	Socket->Begin();
-	Socket->Bind();
-	Socket->isStart = true;
-	Socket->StartListen();
 
 	NotifyUI->SetRenderOpacity(0.0f);
 }

@@ -72,6 +72,7 @@ public:
 	bool			Bind();
 	bool			RecvFrom();
 	bool			WriteTo(BYTE* data, DWORD dataLength);
+	void			CloseSocket();
 	SOCKET			GetSocket();
 	void			ResetTimeSession();
 

@@ -180,6 +180,12 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 	return true;
 }
 
+void ClientSocket::CloseSocket()
+{
+	closesocket(mSocket);
+	WSACleanup();
+}
+
 SOCKET ClientSocket::GetSocket()
 {
 	return mSocket;

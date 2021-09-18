@@ -20,6 +20,13 @@ ABPlayerController::~ABPlayerController()
 	//Socket->players.Empty();
 }
 
+void ABPlayerController::EndOfPlay()
+{
+	Socket->CloseSocket();
+	Socket->StopListen();
+	Socket->players.Empty();
+}
+
 void ABPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -30,11 +37,22 @@ void ABPlayerController::Tick(float DeltaSeconds)
 void ABPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	if (GetWorld()->GetName() == "Login")
+	{
+		Socket->Begin();
+		Socket->Bind();
+		Socket->isStart = true;
+		Socket->StartListen();
+	}
 }
 
 void ABPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
+	if (GetWorld()->GetName() == "GameLevel")
+	{
+		EndOfPlay();
+	}
 }
 
 void ABPlayerController::SetPlayers()
