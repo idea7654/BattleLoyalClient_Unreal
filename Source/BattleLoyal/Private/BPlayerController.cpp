@@ -39,10 +39,13 @@ void ABPlayerController::BeginPlay()
 	Super::BeginPlay();
 	if (GetWorld()->GetName() == "Login")
 	{
-		Socket->Begin();
-		Socket->Bind();
+		bool a = Socket->Begin();
+		bool b = Socket->Bind();
 		Socket->isStart = true;
-		Socket->StartListen();
+		bool c = Socket->StartListen();
+		UE_LOG(LogTemp, Warning, TEXT("%d"), a);
+		UE_LOG(LogTemp, Warning, TEXT("%d"), b);
+		UE_LOG(LogTemp, Warning, TEXT("%d"), c);
 	}
 }
 

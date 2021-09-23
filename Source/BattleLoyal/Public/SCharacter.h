@@ -7,6 +7,7 @@
 #include "ClientSocket.h"
 #include "SCharacter.generated.h"
 
+
 class UCameraComponent;
 class USpringArmComponent;
 class ASWeapon;
@@ -67,6 +68,12 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 	bool bDied;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	bool hasGun;
+
+	UFUNCTION()
+	void SearchObjects();
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -59,6 +59,8 @@ void ClientSocket::StopListen()
 	Stop();
 	Thread->WaitForCompletion();
 	Thread->Kill();
+	CloseSocket();
+	mSocket = NULL;
 	delete Thread;
 	Thread = nullptr;
 	StopTaskCounter.Reset();
@@ -75,12 +77,14 @@ bool ClientSocket::Begin()
 
 	if (WSAStartup(0x202, &mWsaData) == SOCKET_ERROR) // WSAStartup 설정에서 문제 발생하면
 	{
+		UE_LOG(LogTemp, Warning, TEXT("WSAStartUp Error"));
 		WSACleanup(); // WS2_32.DLL의 사용 끝냄
 	}
 
 	mSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (mSocket == INVALID_SOCKET) // 에러 발생시
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Socket Init Error"));
 		closesocket(mSocket);
 		WSACleanup();
 		return false;
@@ -172,8 +176,8 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 	if (mServerInfo.sin_port != 0)
 	{
 		int32 returnVal = sendto(mSocket, SendBuffer, PacketLength, 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
-		UE_LOG(LogTemp, Warning, TEXT("%d"), returnVal);
 		if (returnVal < 0)
+			UE_LOG(LogTemp, Warning, TEXT("%d"), WSAGetLastError());
 			return false;
 	}
 

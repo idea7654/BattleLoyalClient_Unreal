@@ -58,6 +58,7 @@ Build/*
 
 Content/PhotoR_Backgrounds
 Content/RuralAustralia
+Content/CloseCombatAnimSet
 
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/

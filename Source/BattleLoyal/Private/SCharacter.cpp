@@ -7,6 +7,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "SWeapon.h"
+#include "InGameWidget.h"
 #include "SHealthComponent.h"
 
 // Sets default values
@@ -49,12 +50,12 @@ void ASCharacter::BeginPlay()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	/*CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-	}
+	}*/
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 }
@@ -110,6 +111,36 @@ void ASCharacter::OnHealthChanged(USHealthComponent* InHealthComp, float Health,
 	}
 }
 
+void ASCharacter::SearchObjects()
+{
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	this->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	FVector ShotDirection = EyeRotation.Vector();
+	FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+	//QueryParams.bReturnPhysicalMaterial = true;
+
+	FHitResult Hit;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
+	{
+		AActor *HitActor = Hit.GetActor();
+		ASWeapon *DetectedWeapon = Cast<ASWeapon>(HitActor);
+		if (DetectedWeapon)
+		{
+			DetectedWeapon->SetActorEnableCollision(false);
+			CurrentWeapon = DetectedWeapon;
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+			hasGun = true;
+		}
+	}
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -120,6 +151,8 @@ void ASCharacter::Tick(float DeltaTime)
 	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 
 	CameraComp->SetFieldOfView(NewFOV);
+
+	SearchObjects();
 }
 
 // Called to bind functionality to input

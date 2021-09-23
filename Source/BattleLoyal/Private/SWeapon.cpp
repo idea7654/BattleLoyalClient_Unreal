@@ -19,12 +19,12 @@ ASWeapon::ASWeapon()
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
 
-	MuzzleSocketName = "MuzzleSocket";
+	MuzzleSocketName = "MuzzleSocket"; //무기별
 	TracerTargetName = "Target";
 
-	BaseDamage = 20.0f;
+	BaseDamage = 20.0f; //무기별
 
-	RateOfFire = 600;
+	RateOfFire = 600; //무기별
 }
 
 // Called when the game starts or when spawned
