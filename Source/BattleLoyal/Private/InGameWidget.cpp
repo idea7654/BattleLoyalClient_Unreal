@@ -4,18 +4,18 @@
 #include "InGameWidget.h"
 #include "SCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/EditableTextBox.h"
+#include "Animation/WidgetAnimation.h"
 
 void UInGameWidget::NativeConstruct()
 {
-	
-}
+	Super::NativeConstruct();
 
-void UInGameWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
-{
-	
+	Interact->SetRenderOpacity(0.0f);
 }
 
 void UInGameWidget::ShowInteractText()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Process!"));
+	Interact->SetRenderOpacity(1.0f);
+	PlayAnimation(Notify_Interact);
 }

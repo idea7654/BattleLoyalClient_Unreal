@@ -29,12 +29,12 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
-	Socket = ClientSocket::GetSingleton();
-
 	ZoomedFOV = 65.0f;
 	ZoomInterpSpeed = 20.0f;
 
 	WeaponAttachSocketName = "WeaponSocket";
+
+	isInteract = false;
 }
 
 // Called when the game starts or when spawned
@@ -50,14 +50,10 @@ void ASCharacter::BeginPlay()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	/*CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-	}*/
-
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+
+	GameUI = CreateWidget<UInGameWidget>(GetWorld(), GameUISub);
+	GameUI->AddToViewport(9999);
 }
 
 void ASCharacter::BeginCrouch()
@@ -68,6 +64,18 @@ void ASCharacter::BeginCrouch()
 void ASCharacter::EndCrouch()
 {
 	UnCrouch();
+}
+
+void ASCharacter::Interact()
+{
+	if (isInteract)
+	{
+		DetectedWeapon->SetActorEnableCollision(false);
+		CurrentWeapon = DetectedWeapon;
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+		hasGun = true;
+	}
 }
 
 void ASCharacter::BeginZoom()
@@ -129,14 +137,14 @@ void ASCharacter::SearchObjects()
 	if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
 	{
 		AActor *HitActor = Hit.GetActor();
-		ASWeapon *DetectedWeapon = Cast<ASWeapon>(HitActor);
+		DetectedWeapon = Cast<ASWeapon>(HitActor);
 		if (DetectedWeapon)
 		{
-			DetectedWeapon->SetActorEnableCollision(false);
-			CurrentWeapon = DetectedWeapon;
-			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-			hasGun = true;
+			GameUI->ShowInteractText();
+			isInteract = true;
+		}
+		else {
+			isInteract = false;
 		}
 	}
 }
@@ -175,6 +183,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
+
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::Interact);
 }
 
 void ASCharacter::MoveForward(float Value)

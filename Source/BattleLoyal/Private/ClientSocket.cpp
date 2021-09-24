@@ -79,6 +79,7 @@ bool ClientSocket::Begin()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("WSAStartUp Error"));
 		WSACleanup(); // WS2_32.DLLÀÇ »ç¿ë ³¡³¿
+		return false;
 	}
 
 	mSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

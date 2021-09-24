@@ -31,6 +31,8 @@ protected:
 	void BeginCrouch();
 	void EndCrouch();
 
+	void Interact();
+
 	UPROPERTY(VIsibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent *CameraComp;
 
@@ -53,6 +55,7 @@ protected:
 	void EndZoom();
 
 	ASWeapon *CurrentWeapon;
+	ASWeapon *DetectedWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
@@ -74,6 +77,14 @@ protected:
 
 	UFUNCTION()
 	void SearchObjects();
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> GameUISub;
+
+	UPROPERTY()
+	class UInGameWidget *GameUI;
+
+	bool isInteract;
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -82,7 +93,4 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
-
-private:
-	ClientSocket *Socket;
 };

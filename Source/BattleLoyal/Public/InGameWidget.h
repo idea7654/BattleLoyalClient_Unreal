@@ -19,12 +19,13 @@ class BATTLELOYAL_API UInGameWidget : public UUserWidget
 	
 public:
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock *Interact;
+	class UEditableTextBox *Interact;
 
-	UFUNCTION(BlueprintCallable)
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation *Notify_Interact;
+
+	UFUNCTION()
 	void ShowInteractText();
 
 	void NativeConstruct() override;
-
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 };
