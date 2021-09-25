@@ -32,9 +32,7 @@ public:
 	float Pitch;
 	float Roll;
 	// 속도
-	float VX;
-	float VY;
-	float VZ;
+	//float 
 	// 속성
 	bool	IsAlive = true;
 	float	HP = 100;
@@ -103,5 +101,6 @@ public:
 	uint8_t*		WRITE_PU_C2S_START_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength);
+	uint8_t*		WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw);
 };
 

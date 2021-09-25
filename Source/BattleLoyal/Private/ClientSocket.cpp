@@ -151,6 +151,24 @@ bool ClientSocket::RecvFrom()
 		GameStart(message);
 		break;
 	}
+	case MESSAGE_ID::MESSAGE_ID_S2C_MOVE:
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Move!!"));
+		auto RecvData = static_cast<const S2C_MOVE*>(message->packet());
+		std::string userNick = RecvData->nick_name()->c_str();
+		for (auto &i : players)
+		{
+			if (i->Nickname == userNick)
+			{
+				i->X = RecvData->pos()->x();
+				i->Y = RecvData->pos()->y();
+				i->Z = RecvData->pos()->z();
+				i->Roll = RecvData->dir()->x();
+				i->Pitch = RecvData->dir()->y();
+				i->Yaw = RecvData->dir()->z();
+			}
+		}
+	}
 
 	default:
 		break;
@@ -292,6 +310,25 @@ uint8_t *ClientSocket::WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength)
 	auto userNick = builder.CreateString(Nickname);
 	auto makePacket = CreateC2S_EXTEND_SESSION(builder, userNick);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_EXTEND_SESSION, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t* ClientSocket::WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw)
+{
+	if (Nickname == "") return NULL;
+	auto userNick = builder.CreateString(Nickname);
+	auto userPos = Vec3(Pos.X, Pos.Y, Pos.Z);
+	auto userDir = Vec3(Dir.Roll, Dir.Pitch, Dir.Yaw);
+
+	auto makePacket = CreateC2S_MOVE(builder, userNick, &userPos, &userDir, vfront, vright, vyaw);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_MOVE, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

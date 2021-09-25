@@ -9,6 +9,7 @@
 #include "SWeapon.h"
 #include "InGameWidget.h"
 #include "SHealthComponent.h"
+#include "Math/Quat.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -54,6 +55,8 @@ void ASCharacter::BeginPlay()
 
 	GameUI = CreateWidget<UInGameWidget>(GetWorld(), GameUISub);
 	GameUI->AddToViewport(9999);
+
+	Socket = ClientSocket::GetSingleton();
 }
 
 void ASCharacter::BeginCrouch()
@@ -101,6 +104,25 @@ void ASCharacter::StopFire()
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->StopFire();
+	}
+}
+
+void ASCharacter::CheckMove()
+{
+	if (CurrentMFV != MFV || CurrentMRV != MRV || TurnSpeed != TurnSpeedLast)
+	{
+		//움직임 패킷
+		if (Socket)
+		{
+			FVector userPos = this->GetActorTransform().GetLocation();
+			FRotator userDir = this->GetActorTransform().GetRotation().Rotator();
+			int32 size = 0;
+			uint8_t *packet = Socket->WRITE_PU_C2S_MOVE(size, userPos, userDir, CurrentMFV, CurrentMRV, TurnSpeed);
+			Socket->WriteTo(packet, size);
+		}
+		MFV = CurrentMFV;
+		MRV = CurrentMRV;
+		TurnSpeedLast = TurnSpeed;
 	}
 }
 
@@ -161,6 +183,20 @@ void ASCharacter::Tick(float DeltaTime)
 	CameraComp->SetFieldOfView(NewFOV);
 
 	SearchObjects();
+
+	CheckMove();
+
+	/*bool bControlled = IsPawnControlled();
+	if (!bControlled)
+	{
+		for (auto &i : Socket->players)
+		{
+			if (*FString(i->Nickname.c_str()) == this->GetName())
+			{
+
+			}
+		}
+	}*/
 }
 
 // Called to bind functionality to input
@@ -171,8 +207,10 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::MoveRight);
 
-	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::RotatePitch);
+	PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::RotateYaw);
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ASCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ASCharacter::EndCrouch);
@@ -189,12 +227,53 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 void ASCharacter::MoveForward(float Value)
 {
+	CurrentMFV = Value;
 	AddMovementInput(GetActorForwardVector() * Value);
 }
 
 void ASCharacter::MoveRight(float Value)
 {
+	CurrentMRV = Value;
 	AddMovementInput(GetActorRightVector() * Value);
+}
+
+void ASCharacter::RotateYaw(float Value)
+{
+	TurnSpeed = 0.0f;
+	if (Value * GetWorld()->GetDeltaSeconds() * 45.0f > 3.0f)
+	{
+		TurnSpeed = 3.5f;
+	}
+	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f > 1.0f)
+	{
+		TurnSpeed = 1.0f;
+	}
+	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f > 0.0f)
+	{
+		TurnSpeed = 0.4f;
+	}
+	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f == 0.0f)
+	{
+		TurnSpeed = 0.0f;
+	}
+	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f < -3.0f)
+	{
+		TurnSpeed = -3.5f;
+	}
+	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f < -1.0f)
+	{
+		TurnSpeed = -1.0f;
+	}
+	else 
+	{
+		TurnSpeed = -0.4f;
+	}
+	AddControllerYawInput(TurnSpeed);
+}
+
+void ASCharacter::RotatePitch(float Value)
+{
+	AddControllerPitchInput(Value);
 }
 
 FVector ASCharacter::GetPawnViewLocation() const

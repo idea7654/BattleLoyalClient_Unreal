@@ -40,7 +40,9 @@ public:
 
 	void SetNextLevel();
 
-	struct FTimerHandle		Timer;
+	FTimerHandle		Timer;
+
+	UFUNCTION()
 	void					ResetSessionTime();
 
 private:

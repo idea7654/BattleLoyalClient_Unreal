@@ -27,6 +27,8 @@ protected:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+	void RotateYaw(float Value);
+	void RotatePitch(float Value);
 
 	void BeginCrouch();
 	void EndCrouch();
@@ -65,6 +67,7 @@ protected:
 
 	void StartFire();
 	void StopFire();
+	void CheckMove();
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -85,6 +88,15 @@ protected:
 	class UInGameWidget *GameUI;
 
 	bool isInteract;
+
+	float CurrentMFV;
+	float CurrentMRV;
+	float MFV; //MoveFrontValue
+	float MRV; //MoveRightValue
+
+	float TurnSpeed;
+	float TurnSpeedLast;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -93,4 +105,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+private:
+	ClientSocket	*Socket;
 };

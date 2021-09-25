@@ -428,7 +428,9 @@ struct S2C_MOVE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_NICK_NAME = 4,
     VT_POS = 6,
     VT_DIR = 8,
-    VT_MOVEDIR = 10
+    VT_VFRONT = 10,
+    VT_VRIGHT = 12,
+    VT_VYAW = 14
   };
   const flatbuffers::String *nick_name() const {
     return GetPointer<const flatbuffers::String *>(VT_NICK_NAME);
@@ -436,19 +438,27 @@ struct S2C_MOVE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const Vec3 *pos() const {
     return GetStruct<const Vec3 *>(VT_POS);
   }
-  float dir() const {
-    return GetField<float>(VT_DIR, 0.0f);
+  const Vec3 *dir() const {
+    return GetStruct<const Vec3 *>(VT_DIR);
   }
-  int32_t movedir() const {
-    return GetField<int32_t>(VT_MOVEDIR, 0);
+  float vfront() const {
+    return GetField<float>(VT_VFRONT, 0.0f);
+  }
+  float vright() const {
+    return GetField<float>(VT_VRIGHT, 0.0f);
+  }
+  float vyaw() const {
+    return GetField<float>(VT_VYAW, 0.0f);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NICK_NAME) &&
            verifier.VerifyString(nick_name()) &&
            VerifyField<Vec3>(verifier, VT_POS) &&
-           VerifyField<float>(verifier, VT_DIR) &&
-           VerifyField<int32_t>(verifier, VT_MOVEDIR) &&
+           VerifyField<Vec3>(verifier, VT_DIR) &&
+           VerifyField<float>(verifier, VT_VFRONT) &&
+           VerifyField<float>(verifier, VT_VRIGHT) &&
+           VerifyField<float>(verifier, VT_VYAW) &&
            verifier.EndTable();
   }
 };
@@ -463,11 +473,17 @@ struct S2C_MOVEBuilder {
   void add_pos(const Vec3 *pos) {
     fbb_.AddStruct(S2C_MOVE::VT_POS, pos);
   }
-  void add_dir(float dir) {
-    fbb_.AddElement<float>(S2C_MOVE::VT_DIR, dir, 0.0f);
+  void add_dir(const Vec3 *dir) {
+    fbb_.AddStruct(S2C_MOVE::VT_DIR, dir);
   }
-  void add_movedir(int32_t movedir) {
-    fbb_.AddElement<int32_t>(S2C_MOVE::VT_MOVEDIR, movedir, 0);
+  void add_vfront(float vfront) {
+    fbb_.AddElement<float>(S2C_MOVE::VT_VFRONT, vfront, 0.0f);
+  }
+  void add_vright(float vright) {
+    fbb_.AddElement<float>(S2C_MOVE::VT_VRIGHT, vright, 0.0f);
+  }
+  void add_vyaw(float vyaw) {
+    fbb_.AddElement<float>(S2C_MOVE::VT_VYAW, vyaw, 0.0f);
   }
   explicit S2C_MOVEBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -484,10 +500,14 @@ inline flatbuffers::Offset<S2C_MOVE> CreateS2C_MOVE(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> nick_name = 0,
     const Vec3 *pos = 0,
-    float dir = 0.0f,
-    int32_t movedir = 0) {
+    const Vec3 *dir = 0,
+    float vfront = 0.0f,
+    float vright = 0.0f,
+    float vyaw = 0.0f) {
   S2C_MOVEBuilder builder_(_fbb);
-  builder_.add_movedir(movedir);
+  builder_.add_vyaw(vyaw);
+  builder_.add_vright(vright);
+  builder_.add_vfront(vfront);
   builder_.add_dir(dir);
   builder_.add_pos(pos);
   builder_.add_nick_name(nick_name);
@@ -498,15 +518,19 @@ inline flatbuffers::Offset<S2C_MOVE> CreateS2C_MOVEDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *nick_name = nullptr,
     const Vec3 *pos = 0,
-    float dir = 0.0f,
-    int32_t movedir = 0) {
+    const Vec3 *dir = 0,
+    float vfront = 0.0f,
+    float vright = 0.0f,
+    float vyaw = 0.0f) {
   auto nick_name__ = nick_name ? _fbb.CreateString(nick_name) : 0;
   return CreateS2C_MOVE(
       _fbb,
       nick_name__,
       pos,
       dir,
-      movedir);
+      vfront,
+      vright,
+      vyaw);
 }
 
 struct S2C_SHOOT FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -590,7 +614,9 @@ struct C2S_MOVE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_NICK_NAME = 4,
     VT_POS = 6,
     VT_DIR = 8,
-    VT_MOVEDIR = 10
+    VT_VFRONT = 10,
+    VT_VRIGHT = 12,
+    VT_VYAW = 14
   };
   const flatbuffers::String *nick_name() const {
     return GetPointer<const flatbuffers::String *>(VT_NICK_NAME);
@@ -598,19 +624,27 @@ struct C2S_MOVE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const Vec3 *pos() const {
     return GetStruct<const Vec3 *>(VT_POS);
   }
-  float dir() const {
-    return GetField<float>(VT_DIR, 0.0f);
+  const Vec3 *dir() const {
+    return GetStruct<const Vec3 *>(VT_DIR);
   }
-  int32_t movedir() const {
-    return GetField<int32_t>(VT_MOVEDIR, 0);
+  float vfront() const {
+    return GetField<float>(VT_VFRONT, 0.0f);
+  }
+  float vright() const {
+    return GetField<float>(VT_VRIGHT, 0.0f);
+  }
+  float vyaw() const {
+    return GetField<float>(VT_VYAW, 0.0f);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NICK_NAME) &&
            verifier.VerifyString(nick_name()) &&
            VerifyField<Vec3>(verifier, VT_POS) &&
-           VerifyField<float>(verifier, VT_DIR) &&
-           VerifyField<int32_t>(verifier, VT_MOVEDIR) &&
+           VerifyField<Vec3>(verifier, VT_DIR) &&
+           VerifyField<float>(verifier, VT_VFRONT) &&
+           VerifyField<float>(verifier, VT_VRIGHT) &&
+           VerifyField<float>(verifier, VT_VYAW) &&
            verifier.EndTable();
   }
 };
@@ -625,11 +659,17 @@ struct C2S_MOVEBuilder {
   void add_pos(const Vec3 *pos) {
     fbb_.AddStruct(C2S_MOVE::VT_POS, pos);
   }
-  void add_dir(float dir) {
-    fbb_.AddElement<float>(C2S_MOVE::VT_DIR, dir, 0.0f);
+  void add_dir(const Vec3 *dir) {
+    fbb_.AddStruct(C2S_MOVE::VT_DIR, dir);
   }
-  void add_movedir(int32_t movedir) {
-    fbb_.AddElement<int32_t>(C2S_MOVE::VT_MOVEDIR, movedir, 0);
+  void add_vfront(float vfront) {
+    fbb_.AddElement<float>(C2S_MOVE::VT_VFRONT, vfront, 0.0f);
+  }
+  void add_vright(float vright) {
+    fbb_.AddElement<float>(C2S_MOVE::VT_VRIGHT, vright, 0.0f);
+  }
+  void add_vyaw(float vyaw) {
+    fbb_.AddElement<float>(C2S_MOVE::VT_VYAW, vyaw, 0.0f);
   }
   explicit C2S_MOVEBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -646,10 +686,14 @@ inline flatbuffers::Offset<C2S_MOVE> CreateC2S_MOVE(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> nick_name = 0,
     const Vec3 *pos = 0,
-    float dir = 0.0f,
-    int32_t movedir = 0) {
+    const Vec3 *dir = 0,
+    float vfront = 0.0f,
+    float vright = 0.0f,
+    float vyaw = 0.0f) {
   C2S_MOVEBuilder builder_(_fbb);
-  builder_.add_movedir(movedir);
+  builder_.add_vyaw(vyaw);
+  builder_.add_vright(vright);
+  builder_.add_vfront(vfront);
   builder_.add_dir(dir);
   builder_.add_pos(pos);
   builder_.add_nick_name(nick_name);
@@ -660,15 +704,19 @@ inline flatbuffers::Offset<C2S_MOVE> CreateC2S_MOVEDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *nick_name = nullptr,
     const Vec3 *pos = 0,
-    float dir = 0.0f,
-    int32_t movedir = 0) {
+    const Vec3 *dir = 0,
+    float vfront = 0.0f,
+    float vright = 0.0f,
+    float vyaw = 0.0f) {
   auto nick_name__ = nick_name ? _fbb.CreateString(nick_name) : 0;
   return CreateC2S_MOVE(
       _fbb,
       nick_name__,
       pos,
       dir,
-      movedir);
+      vfront,
+      vright,
+      vyaw);
 }
 
 struct C2S_EXTEND_SESSION FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
