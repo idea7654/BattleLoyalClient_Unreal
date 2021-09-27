@@ -51,6 +51,5 @@ void ULoginWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		LoginError();
 		Socket->isLoginError = false;
-		
 	}
 }

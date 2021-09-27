@@ -10,6 +10,8 @@
 /**
  * 
  */
+
+
 UCLASS()
 class BATTLELOYAL_API ABPlayerController : public APlayerController
 {
@@ -28,6 +30,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Spawning")
 	ASCharacter* SpawnedCharacter;
 
+	UFUNCTION(BlueprintCallable, Category = "Spawning")
+	void MyCharacterSetup();
+
 	UFUNCTION()
 	void EndOfPlay();
 
@@ -38,12 +43,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spawning")
 	void SetPlayers();
 
-	void SetNextLevel();
-
 	FTimerHandle		Timer;
 
 	UFUNCTION()
-	void					ResetSessionTime();
+	void				ResetSessionTime();
+	void				GetPacket();
+	void				GameStart(const Message *packetMessage);
+
+	UPROPERTY()
+	TArray<ASCharacter*>		Characters;
 
 private:
 	ClientSocket	*Socket;

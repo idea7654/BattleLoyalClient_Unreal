@@ -128,51 +128,54 @@ bool ClientSocket::RecvFrom()
 	::memcpy(&packet, mReadBuffer + sizeof(int32) * 2, PacketLength);
 
 	auto message = GetMessage(packet);
-	auto protocol = message->packet_type();
+	QueueMutex.lock();
+	MessageQueue.push(message);
+	QueueMutex.unlock();
+	//auto protocol = message->packet_type();
 
-	switch (protocol)
-	{
-	case MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN:
-	{
-		auto RecvData = static_cast<const S2C_COMPLETE_LOGIN*>(message->packet());
-		Nickname = RecvData->nickname()->c_str();
-		isLoginSuccess = true;
-		break;
-	}
-	case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
-	{
-		isLoginError = true;
-		break;
-	}
-	case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
-	{
-		//LoadNextLevel
-		SendReliable();
-		GameStart(message);
-		break;
-	}
-	case MESSAGE_ID::MESSAGE_ID_S2C_MOVE:
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Move!!"));
-		auto RecvData = static_cast<const S2C_MOVE*>(message->packet());
-		std::string userNick = RecvData->nick_name()->c_str();
-		for (auto &i : players)
-		{
-			if (i->Nickname == userNick)
-			{
-				i->X = RecvData->pos()->x();
-				i->Y = RecvData->pos()->y();
-				i->Z = RecvData->pos()->z();
-				i->Roll = RecvData->dir()->x();
-				i->Pitch = RecvData->dir()->y();
-				i->Yaw = RecvData->dir()->z();
-			}
-		}
-	}
+	//switch (protocol)
+	//{
+	//case MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN:
+	//{
+	//	auto RecvData = static_cast<const S2C_COMPLETE_LOGIN*>(message->packet());
+	//	Nickname = RecvData->nickname()->c_str();
+	//	isLoginSuccess = true;
+	//	break;
+	//}
+	//case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
+	//{
+	//	isLoginError = true;
+	//	break;
+	//}
+	//case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
+	//{
+	//	//LoadNextLevel
+	//	SendReliable();
+	//	GameStart(message);
+	//	break;
+	//}
+	//case MESSAGE_ID::MESSAGE_ID_S2C_MOVE:
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Move!!"));
+	//	auto RecvData = static_cast<const S2C_MOVE*>(message->packet());
+	//	std::string userNick = RecvData->nick_name()->c_str();
+	//	for (auto &i : players)
+	//	{
+	//		if (i->Nickname == userNick)
+	//		{
+	//			i->X = RecvData->pos()->x();
+	//			i->Y = RecvData->pos()->y();
+	//			i->Z = RecvData->pos()->z();
+	//			i->Roll = RecvData->dir()->x();
+	//			i->Pitch = RecvData->dir()->y();
+	//			i->Yaw = RecvData->dir()->z();
+	//		}
+	//	}
+	//}
 
-	default:
-		break;
-	}
+	//default:
+	//	break;
+	//}
 
 	return true;
 }
@@ -189,7 +192,7 @@ bool ClientSocket::WriteTo(BYTE* data, DWORD dataLength)
 
 	memcpy(SendBuffer, &PacketLength, sizeof(int32));
 	memcpy(SendBuffer + sizeof(int32), &mPacketNumber, sizeof(int32));
-	UE_LOG(LogTemp, Warning, TEXT("%d"), dataLength);
+	//UE_LOG(LogTemp, Warning, TEXT("%d"), dataLength);
 	memcpy(SendBuffer + sizeof(int32) * 2, data, dataLength);
 
 	if (mServerInfo.sin_port != 0)
@@ -230,29 +233,6 @@ void ClientSocket::SendReliable()
 	memset(AckByte, 0, sizeof(AckByte));
 	memcpy(AckByte, &Ack, sizeof(int32));
 	int32 returnVal = sendto(mSocket, AckByte, sizeof(AckByte), 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
-}
-
-void ClientSocket::GameStart(const Message *packetMessage)
-{
-	auto RecvData = static_cast<const S2C_GAME_START*>(packetMessage->packet());
-	auto userLength = RecvData->userdata()->Length();
-	auto gunLength = RecvData->gundata()->Length();
-	
-	for (int32 i = 0; i < (int32)userLength; i++)
-	{
-		TSharedPtr<sCharacter> chara (new sCharacter());
-		chara->X = RecvData->userdata()->Get(i)->pos()->x();
-		chara->Y = RecvData->userdata()->Get(i)->pos()->y();
-		chara->Z = RecvData->userdata()->Get(i)->pos()->z();
-		chara->Nickname = RecvData->userdata()->Get(i)->nickname()->str();
-
-		players.Add(chara);
-		/*if (RecvData->userdata()->Get(i)->nickname()->str() == Nickname)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Its me!"));
-		}*/
-	}
-	isPlayers = true;
 }
 
 uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)

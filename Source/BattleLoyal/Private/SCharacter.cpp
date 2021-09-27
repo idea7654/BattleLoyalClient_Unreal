@@ -240,35 +240,19 @@ void ASCharacter::MoveRight(float Value)
 void ASCharacter::RotateYaw(float Value)
 {
 	TurnSpeed = 0.0f;
-	if (Value * GetWorld()->GetDeltaSeconds() * 45.0f > 3.0f)
-	{
-		TurnSpeed = 3.5f;
-	}
-	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f > 1.0f)
-	{
-		TurnSpeed = 1.0f;
-	}
-	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f > 0.0f)
-	{
-		TurnSpeed = 0.4f;
-	}
-	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f == 0.0f)
-	{
-		TurnSpeed = 0.0f;
-	}
-	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f < -3.0f)
-	{
-		TurnSpeed = -3.5f;
-	}
-	else if (Value * GetWorld()->GetDeltaSeconds() * 45.0f < -1.0f)
+	if (Value < .0f)
 	{
 		TurnSpeed = -1.0f;
 	}
-	else 
+	else if (Value > .0f)
 	{
-		TurnSpeed = -0.4f;
+		TurnSpeed = 1.0f;
 	}
-	AddControllerYawInput(TurnSpeed);
+	else {
+		TurnSpeed = 0.0f;
+	}
+	//수정필요..좀 더 생각해보자
+	AddControllerYawInput(Value * GetWorld()->GetDeltaSeconds() * 45.0f);
 }
 
 void ASCharacter::RotatePitch(float Value)

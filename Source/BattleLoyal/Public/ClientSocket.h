@@ -8,13 +8,13 @@
 #include <windows.h>
 #include <string>
 #include "UdpProtocol.h"
+#include <queue>
+#include <mutex>
 #include "Runtime/Core/Public/HAL/Runnable.h"
 
 #define	MAX_BUFFER_LENGTH	1024
 #define SERVER_PORT			9999
 #define SERVER_IP			"203.250.133.43"
-
-class S2C_START_GAME;
 
 class sCharacter {
 public:
@@ -31,8 +31,6 @@ public:
 	float Yaw;
 	float Pitch;
 	float Roll;
-	// 속도
-	//float 
 	// 속성
 	bool	IsAlive = true;
 	float	HP = 100;
@@ -76,16 +74,16 @@ public:
 
 public: //For Game Thread
 	bool								isLoginError = false;
-	bool								isLoginSuccess = false;
 	bool								isMatching = false;
 	bool								isStart = false;
 	std::string							Nickname;			
 
+	std::queue<const Message*>			MessageQueue;
+	std::mutex							QueueMutex;
+	void								SendReliable();
+
 	UPROPERTY(VisibleAnywhere, Category = "Spawning")
 	TArray<TSharedPtr<sCharacter>>		players;
-
-	bool								isPlayers = false;
-	
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];
 	char			mWriteBuffer[MAX_BUFFER_LENGTH];
@@ -93,8 +91,6 @@ private:
 	SOCKADDR_IN		mServerInfo;
 	WSADATA			mWsaData;
 	int32			mPacketNumber = 2;
-	void			SendReliable();
-	void			GameStart(const Message *packetMessage);
 
 public:
 	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
