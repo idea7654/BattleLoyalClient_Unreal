@@ -97,6 +97,9 @@ protected:
 	float TurnSpeed;
 	float TurnSpeedLast;
 
+	UFUNCTION()
+	void OtherPlayerMove();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

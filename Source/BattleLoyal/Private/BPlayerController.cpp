@@ -9,6 +9,7 @@
 #include "UdpProtocol.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "GameFramework/PawnMovementComponent.h"
 
 ABPlayerController::ABPlayerController()
 {
@@ -22,10 +23,6 @@ ABPlayerController::~ABPlayerController()
 	//Socket->players.Empty();
 }
 
-void ABPlayerController::MyCharacterSetup()
-{
-}
-
 void ABPlayerController::EndOfPlay()
 {
 	Socket->CloseSocket();
@@ -33,6 +30,7 @@ void ABPlayerController::EndOfPlay()
 	Socket->players.Empty();
 	Socket->isStart = false;
 	Socket->isMatching = false;
+	Socket->Nickname = "";
 }
 
 void ABPlayerController::Tick(float DeltaSeconds)
@@ -81,14 +79,14 @@ void ABPlayerController::SetPlayers()
 		if (playerVar->Nickname.c_str() == Socket->Nickname)
 		{
 			ASCharacter* SpawnCharacter = GetWorld()->SpawnActor<ASCharacter>(WhoToSpawn, SpawnLocationPos, FRotator::ZeroRotator, SpawnParams);
-			//SpawnCharacter->SpawnDefaultController();
+			SpawnCharacter->SpawnDefaultController();
 			SpawnedCharacter = SpawnCharacter;
 			Characters.Add(SpawnCharacter);
 		}
 		else
 		{
 			ASCharacter* SpawnCharacter = GetWorld()->SpawnActor<ASCharacter>(WhoToSpawn, SpawnLocationPos, FRotator::ZeroRotator, SpawnParams);
-			//SpawnCharacter->SpawnDefaultController();
+			SpawnCharacter->SpawnDefaultController();
 			Characters.Add(SpawnCharacter);
 		}
 	}
@@ -97,7 +95,7 @@ void ABPlayerController::SetPlayers()
 
 void ABPlayerController::ResetSessionTime()
 {
-	if (Socket->players.Num() != 0)
+	if (Socket->Nickname != "")
 		Socket->ResetTimeSession();
 }
 
@@ -135,26 +133,25 @@ void ABPlayerController::GetPacket()
 		{
 			auto RecvData = static_cast<const S2C_MOVE*>(message->packet());
 			std::string userNick = RecvData->nick_name()->c_str();
-			/*for (auto &i : Socket->players)
-			{
-				if (i->Nickname == userNick)
-				{
-					i->X = RecvData->pos()->x();
-					i->Y = RecvData->pos()->y();
-					i->Z = RecvData->pos()->z();
-					i->Roll = RecvData->dir()->x();
-					i->Pitch = RecvData->dir()->y();
-					i->Yaw = RecvData->dir()->z();
-				}
-			}*/
-			
+
 			for (int32 i = 0; i < Characters.Num(); i++)
 			{
-				if (Characters[i]->GetName() == FString(userNick.c_str()))
+				if (FString(userNick.c_str()) == Characters[i]->GetName())
 				{
-					//요거 작동합니다!
-					//Characters[i]->SetActorLocation(FVector(RecvData->pos()->x(), RecvData->pos()->y(), RecvData->pos()->z()));
+					Characters[i]->SetActorLocation(FVector(RecvData->pos()->x(), RecvData->pos()->y(), RecvData->pos()->z()));
+					break;
+				}
+			}
 
+			for (int32 i = 0; i < Socket->players.Num(); i++)
+			{
+				if (Socket->players[i]->Nickname == userNick)
+				{
+					Socket->players[i]->Yaw = RecvData->dir()->z();
+
+					Socket->players[i]->VFront = RecvData->vfront();
+					Socket->players[i]->VRight = RecvData->vright();
+					break;
 				}
 			}
 			break;
@@ -185,3 +182,4 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 
 	UGameplayStatics::OpenLevel(GetWorld(), TEXT("GameLevel"));
 }
+

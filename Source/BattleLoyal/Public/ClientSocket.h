@@ -29,8 +29,8 @@ public:
 	float Z;
 	// 회전값
 	float Yaw;
-	float Pitch;
-	float Roll;
+	float VFront;
+	float VRight;
 	// 속성
 	bool	IsAlive = true;
 	float	HP = 100;

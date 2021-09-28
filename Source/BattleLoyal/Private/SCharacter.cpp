@@ -10,6 +10,7 @@
 #include "InGameWidget.h"
 #include "SHealthComponent.h"
 #include "Math/Quat.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -61,7 +62,8 @@ void ASCharacter::BeginPlay()
 
 void ASCharacter::BeginCrouch()
 {
-	Crouch();
+	if(!this->GetMovementComponent()->IsFalling())
+		Crouch();
 }
 
 void ASCharacter::EndCrouch()
@@ -112,7 +114,7 @@ void ASCharacter::CheckMove()
 	if (CurrentMFV != MFV || CurrentMRV != MRV || TurnSpeed != TurnSpeedLast)
 	{
 		//움직임 패킷
-		if (Socket)
+		if (Socket && FString(Socket->Nickname.c_str()) == this->GetName())
 		{
 			FVector userPos = this->GetActorTransform().GetLocation();
 			FRotator userDir = this->GetActorTransform().GetRotation().Rotator();
@@ -186,17 +188,7 @@ void ASCharacter::Tick(float DeltaTime)
 
 	CheckMove();
 
-	/*bool bControlled = IsPawnControlled();
-	if (!bControlled)
-	{
-		for (auto &i : Socket->players)
-		{
-			if (*FString(i->Nickname.c_str()) == this->GetName())
-			{
-
-			}
-		}
-	}*/
+	OtherPlayerMove();
 }
 
 // Called to bind functionality to input
@@ -228,13 +220,13 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ASCharacter::MoveForward(float Value)
 {
 	CurrentMFV = Value;
-	AddMovementInput(GetActorForwardVector() * Value);
+	AddMovementInput(this->GetActorForwardVector() * Value * GetWorld()->GetDeltaSeconds() * 45.0f);
 }
 
 void ASCharacter::MoveRight(float Value)
 {
 	CurrentMRV = Value;
-	AddMovementInput(GetActorRightVector() * Value);
+	this->AddMovementInput(this->GetActorRightVector() * Value * GetWorld()->GetDeltaSeconds() * 45.0f);
 }
 
 void ASCharacter::RotateYaw(float Value)
@@ -268,4 +260,23 @@ FVector ASCharacter::GetPawnViewLocation() const
 	}
 
 	return Super::GetPawnViewLocation();
+}
+
+void ASCharacter::OtherPlayerMove()
+{
+	if (Socket->Nickname != "" && this->GetName() != FString(Socket->Nickname.c_str()))
+	{
+		for (auto &i : Socket->players)
+		{
+			if (FString(i->Nickname.c_str()) == this->GetName()) //이 캐릭터 클래스 이름과..소켓에서 넘어온 이름
+			{
+				SetActorRelativeRotation(FRotator(0.0f, i->Yaw, 0.0f));
+
+				this->AddMovementInput(this->GetActorForwardVector() * i->VFront * GetWorld()->GetDeltaSeconds() * 45.0f);
+				this->AddMovementInput(this->GetActorRightVector() * i->VRight * GetWorld()->GetDeltaSeconds() * 45.0f);
+
+				break;
+			}
+		}
+	}
 }

@@ -30,9 +30,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Spawning")
 	ASCharacter* SpawnedCharacter;
 
-	UFUNCTION(BlueprintCallable, Category = "Spawning")
-	void MyCharacterSetup();
-
 	UFUNCTION()
 	void EndOfPlay();
 
