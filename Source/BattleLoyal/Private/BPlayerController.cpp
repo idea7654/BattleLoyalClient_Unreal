@@ -10,6 +10,7 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "SWeapon.h"
 
 ABPlayerController::ABPlayerController()
 {
@@ -31,6 +32,7 @@ void ABPlayerController::EndOfPlay()
 	Socket->isStart = false;
 	Socket->isMatching = false;
 	Socket->Nickname = "";
+	Socket->Guns.Empty();
 }
 
 void ABPlayerController::Tick(float DeltaSeconds)
@@ -91,6 +93,20 @@ void ABPlayerController::SetPlayers()
 		}
 	}
 	OnPossess(SpawnedCharacter);
+
+	for (auto &gun : Socket->Guns)
+	{
+		FVector SpawnLocationPos;
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+		SpawnParams.Name = FName(*FString::FromInt(gun->id));
+		SpawnLocationPos = FVector(gun->X, gun->Y, gun->Z);
+
+		ASWeapon *SpawnGun = GetWorld()->SpawnActor<ASWeapon>(GunSpawn, SpawnLocationPos, FRotator::ZeroRotator, SpawnParams);
+		Guns.Add(SpawnGun);
+	}
 }
 
 void ABPlayerController::ResetSessionTime()
@@ -136,10 +152,13 @@ void ABPlayerController::GetPacket()
 
 			for (int32 i = 0; i < Characters.Num(); i++)
 			{
-				if (FString(userNick.c_str()) == Characters[i]->GetName())
+				if (Characters[i])
 				{
-					Characters[i]->SetActorLocation(FVector(RecvData->pos()->x(), RecvData->pos()->y(), RecvData->pos()->z()));
-					break;
+					if (FString(userNick.c_str()) == Characters[i]->GetName())
+					{
+						Characters[i]->SetActorLocation(FVector(RecvData->pos()->x(), RecvData->pos()->y(), RecvData->pos()->z()));
+						break;
+					}
 				}
 			}
 
@@ -151,10 +170,44 @@ void ABPlayerController::GetPacket()
 
 					Socket->players[i]->VFront = RecvData->vfront();
 					Socket->players[i]->VRight = RecvData->vright();
+
+					Socket->players[i]->isJump = RecvData->jump();
+					Socket->players[i]->isCrouch = RecvData->crouch();
 					break;
 				}
 			}
 			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_PICKUP_GUN:
+		{
+			auto RecvData = static_cast<const S2C_PICKUP_GUN*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			int32 gunNum = RecvData->gunnum();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("Debug %s"), FString(userNick.c_str())));
+			if (userNick != Socket->Nickname)
+			{
+				for (auto &gun : Guns)
+				{
+					if (gun->GetName() == FString::FromInt(gunNum))
+					{
+						TargetGun = gun;
+						break;
+					}
+				}
+				//ASCharacter *Character;
+				for (auto &chara : Characters)
+				{
+					if (chara->GetName() == FString(userNick.c_str()))
+					{
+						SpawnedCharacter = chara;
+					}
+				}
+				TargetGun->SetActorEnableCollision(false);
+				TargetGun->SetOwner(SpawnedCharacter);
+				TargetGun->AttachToComponent(SpawnedCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SpawnedCharacter->WeaponAttachSocketName);
+				SpawnedCharacter->hasGun = true;
+				
+			}
 		}
 
 		default:
@@ -178,6 +231,16 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 		chara->Nickname = RecvData->userdata()->Get(i)->nickname()->str();
 
 		Socket->players.Add(chara);
+	}
+
+	for (int32 i = 0; i < (int32)gunLength; i++)
+	{
+		TSharedPtr<Gun> gun(new Gun());
+		gun->X = RecvData->gundata()->Get(i)->pos()->x();
+		gun->Y = RecvData->gundata()->Get(i)->pos()->y();
+		gun->Z = RecvData->gundata()->Get(i)->pos()->z();
+
+		Socket->Guns.Add(gun);
 	}
 
 	UGameplayStatics::OpenLevel(GetWorld(), TEXT("GameLevel"));

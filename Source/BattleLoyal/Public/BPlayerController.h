@@ -12,6 +12,7 @@
  */
 
 
+
 UCLASS()
 class BATTLELOYAL_API ABPlayerController : public APlayerController
 {
@@ -23,6 +24,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<class ACharacter> WhoToSpawn;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TSubclassOf<class ASWeapon> GunSpawn;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	FName LevelName = FName(TEXT("GameLevel"));
@@ -50,6 +54,11 @@ public:
 	UPROPERTY()
 	TArray<ASCharacter*>		Characters;
 
+	UPROPERTY()
+	TArray<ASWeapon*>			Guns;
+
+	UPROPERTY()
+	class ASWeapon* TargetGun;
 private:
 	ClientSocket	*Socket;
 	

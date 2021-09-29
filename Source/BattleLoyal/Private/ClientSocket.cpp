@@ -300,15 +300,33 @@ uint8_t *ClientSocket::WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength)
 	return data;
 }
 
-uint8_t* ClientSocket::WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw)
+uint8_t* ClientSocket::WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw, bool isJump, bool isCrouch)
 {
 	if (Nickname == "") return NULL;
 	auto userNick = builder.CreateString(Nickname);
 	auto userPos = Vec3(Pos.X, Pos.Y, Pos.Z);
 	auto userDir = Vec3(Dir.Roll, Dir.Pitch, Dir.Yaw);
 
-	auto makePacket = CreateC2S_MOVE(builder, userNick, &userPos, &userDir, vfront, vright, vyaw);
+	auto makePacket = CreateC2S_MOVE(builder, userNick, &userPos, &userDir, vfront, vright, vyaw, isJump, isCrouch);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_MOVE, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t * ClientSocket::WRITE_PU_C2S_PICKUP_GUN(int32 & refLength, int32 gunNum)
+{
+	if (Nickname == "") return NULL;
+	UE_LOG(LogTemp, Warning, TEXT("%d"), gunNum);
+	auto userNick = builder.CreateString(Nickname);
+
+	auto makePacket = CreateS2C_PICKUP_GUN(builder, userNick, gunNum);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_PICKUP_GUN, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

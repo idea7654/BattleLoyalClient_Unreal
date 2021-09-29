@@ -62,21 +62,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
-	FName WeaponAttachSocketName;
-
 	void StartFire();
 	void StopFire();
 	void CheckMove();
+	void JumpFunc();
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 	bool bDied;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
-	bool hasGun;
 
 	UFUNCTION()
 	void SearchObjects();
@@ -97,6 +92,10 @@ protected:
 	float TurnSpeed;
 	float TurnSpeedLast;
 
+	bool isJump = false;
+	bool isCrouch = false;
+	bool CurrentCrouch = false;
+
 	UFUNCTION()
 	void OtherPlayerMove();
 
@@ -109,6 +108,11 @@ public:
 
 	virtual FVector GetPawnViewLocation() const override;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	bool hasGun;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName WeaponAttachSocketName;
 private:
 	ClientSocket	*Socket;
 };

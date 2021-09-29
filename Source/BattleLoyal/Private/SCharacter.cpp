@@ -62,13 +62,17 @@ void ASCharacter::BeginPlay()
 
 void ASCharacter::BeginCrouch()
 {
-	if(!this->GetMovementComponent()->IsFalling())
+	if (!this->GetMovementComponent()->IsFalling())
+	{
 		Crouch();
+		CurrentCrouch = true;
+	}
 }
 
 void ASCharacter::EndCrouch()
 {
 	UnCrouch();
+	CurrentCrouch = false;
 }
 
 void ASCharacter::Interact()
@@ -80,6 +84,11 @@ void ASCharacter::Interact()
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
 		hasGun = true;
+		FString gunNum = DetectedWeapon->GetName();
+		int32 intGun = FCString::Atoi(*gunNum);
+		int32 size = 0;
+		auto packet = Socket->WRITE_PU_C2S_PICKUP_GUN(size, intGun);
+		Socket->WriteTo(packet, size);
 	}
 }
 
@@ -111,7 +120,7 @@ void ASCharacter::StopFire()
 
 void ASCharacter::CheckMove()
 {
-	if (CurrentMFV != MFV || CurrentMRV != MRV || TurnSpeed != TurnSpeedLast)
+	if (CurrentMFV != MFV || CurrentMRV != MRV || TurnSpeed != TurnSpeedLast || isJump == true || isCrouch != CurrentCrouch)
 	{
 		//움직임 패킷
 		if (Socket && FString(Socket->Nickname.c_str()) == this->GetName())
@@ -119,13 +128,21 @@ void ASCharacter::CheckMove()
 			FVector userPos = this->GetActorTransform().GetLocation();
 			FRotator userDir = this->GetActorTransform().GetRotation().Rotator();
 			int32 size = 0;
-			uint8_t *packet = Socket->WRITE_PU_C2S_MOVE(size, userPos, userDir, CurrentMFV, CurrentMRV, TurnSpeed);
+			uint8_t *packet = Socket->WRITE_PU_C2S_MOVE(size, userPos, userDir, CurrentMFV, CurrentMRV, TurnSpeed, isJump, CurrentCrouch);
 			Socket->WriteTo(packet, size);
 		}
+		isJump = false;
 		MFV = CurrentMFV;
 		MRV = CurrentMRV;
 		TurnSpeedLast = TurnSpeed;
+		isCrouch = CurrentCrouch;
 	}
+}
+
+void ASCharacter::JumpFunc()
+{
+	isJump = true;
+	Jump();
 }
 
 void ASCharacter::OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -189,6 +206,9 @@ void ASCharacter::Tick(float DeltaTime)
 	CheckMove();
 
 	OtherPlayerMove();
+
+	if (this->GetMovementComponent()->IsFalling())
+		isJump = false;
 }
 
 // Called to bind functionality to input
@@ -206,7 +226,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ASCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ASCharacter::EndCrouch);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::JumpFunc);
 
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ASCharacter::BeginZoom);
 	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ASCharacter::EndZoom);
@@ -275,6 +295,15 @@ void ASCharacter::OtherPlayerMove()
 				this->AddMovementInput(this->GetActorForwardVector() * i->VFront * GetWorld()->GetDeltaSeconds() * 45.0f);
 				this->AddMovementInput(this->GetActorRightVector() * i->VRight * GetWorld()->GetDeltaSeconds() * 45.0f);
 
+				if (i->isJump)
+				{
+					this->Jump();
+				}
+
+				if (i->isCrouch)
+					this->Crouch();
+				else
+					this->UnCrouch();
 				break;
 			}
 		}

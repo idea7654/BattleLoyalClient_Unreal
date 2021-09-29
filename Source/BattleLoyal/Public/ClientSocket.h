@@ -31,9 +31,21 @@ public:
 	float Yaw;
 	float VFront;
 	float VRight;
+
+	bool isJump = false;
+	bool isCrouch = false;
 	// ¼Ó¼º
 	bool	IsAlive = true;
 	float	HP = 100;
+};
+
+struct Gun
+{
+public:
+	int32 id;
+	float X;
+	float Y;
+	float Z;
 };
 
 class BATTLELOYAL_API ClientSocket : public FRunnable
@@ -84,6 +96,9 @@ public: //For Game Thread
 
 	UPROPERTY(VisibleAnywhere, Category = "Spawning")
 	TArray<TSharedPtr<sCharacter>>		players;
+
+	UPROPERTY(VisibleAnywhere, Category = "Spawning")
+	TArray<TSharedPtr<Gun>>		Guns;
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];
 	char			mWriteBuffer[MAX_BUFFER_LENGTH];
@@ -97,6 +112,7 @@ public:
 	uint8_t*		WRITE_PU_C2S_START_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength);
-	uint8_t*		WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw);
+	uint8_t*		WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw, bool isJump, bool isCrouch);
+	uint8_t*		WRITE_PU_C2S_PICKUP_GUN(int32 &refLength, int32 gunNum);
 };
 
