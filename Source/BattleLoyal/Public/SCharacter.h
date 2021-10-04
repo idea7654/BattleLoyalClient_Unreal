@@ -97,7 +97,12 @@ protected:
 	bool CurrentCrouch = false;
 
 	UFUNCTION()
-	void OtherPlayerMove();
+	void OtherPlayerMove(float Delta);
+
+	FVector MoveDirection;
+
+	//UFUNCTION()
+	void Move(float Delta);
 
 public:
 	// Called every frame

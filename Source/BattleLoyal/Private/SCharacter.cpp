@@ -123,6 +123,7 @@ void ASCharacter::CheckMove()
 	if (CurrentMFV != MFV || CurrentMRV != MRV || TurnSpeed != TurnSpeedLast || isJump == true || isCrouch != CurrentCrouch)
 	{
 		//움직임 패킷
+		UE_LOG(LogTemp, Warning, TEXT("Move"));
 		if (Socket && FString(Socket->Nickname.c_str()) == this->GetName())
 		{
 			FVector userPos = this->GetActorTransform().GetLocation();
@@ -190,6 +191,17 @@ void ASCharacter::SearchObjects()
 	}
 }
 
+void ASCharacter::Move(float Delta)
+{
+	if (MoveDirection.IsZero()) {
+		return;
+	}
+
+	MoveDirection.Normalize();
+	AddMovementInput(MoveDirection, 45.0f * Delta);
+	MoveDirection.Set(0.0f, 0.0f, 0.0f);
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -204,8 +216,9 @@ void ASCharacter::Tick(float DeltaTime)
 	SearchObjects();
 
 	CheckMove();
-
-	OtherPlayerMove();
+	
+	OtherPlayerMove(DeltaTime);
+	Move(DeltaTime);
 
 	if (this->GetMovementComponent()->IsFalling())
 		isJump = false;
@@ -240,13 +253,21 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ASCharacter::MoveForward(float Value)
 {
 	CurrentMFV = Value;
-	AddMovementInput(this->GetActorForwardVector() * Value * GetWorld()->GetDeltaSeconds() * 45.0f);
+	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+	Direction.Z = 0.0f;
+	Direction.Normalize();
+	MoveDirection += Direction * FMath::Clamp(Value, -1.0f, 1.0f);
+	//this->AddMovementInput(Direction, Value * GetWorld()->GetDeltaSeconds() * 45.0f);
 }
 
 void ASCharacter::MoveRight(float Value)
 {
 	CurrentMRV = Value;
-	this->AddMovementInput(this->GetActorRightVector() * Value * GetWorld()->GetDeltaSeconds() * 45.0f);
+	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+	Direction.Z = 0.0f;
+	Direction.Normalize();
+	MoveDirection += Direction * FMath::Clamp(Value, -1.0f, 1.0f);
+	//this->AddMovementInput(Direction, Value * GetWorld()->GetDeltaSeconds() * 45.0f);
 }
 
 void ASCharacter::RotateYaw(float Value)
@@ -282,7 +303,7 @@ FVector ASCharacter::GetPawnViewLocation() const
 	return Super::GetPawnViewLocation();
 }
 
-void ASCharacter::OtherPlayerMove()
+void ASCharacter::OtherPlayerMove(float Delta)
 {
 	if (Socket->Nickname != "" && this->GetName() != FString(Socket->Nickname.c_str()))
 	{
@@ -291,13 +312,23 @@ void ASCharacter::OtherPlayerMove()
 			if (FString(i->Nickname.c_str()) == this->GetName()) //이 캐릭터 클래스 이름과..소켓에서 넘어온 이름
 			{
 				SetActorRelativeRotation(FRotator(0.0f, i->Yaw, 0.0f));
+				GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Yellow, FString::Printf(TEXT("Other Velocity: %f"), GetVelocity().X * Delta));
+				//this->AddMovementInput(this->GetActorForwardVector(), i->VFront * Delta * 45.0f);
+				//this->AddMovementInput(this->GetActorRightVector(), i->VRight * Delta * 45.0f);
 
-				this->AddMovementInput(this->GetActorForwardVector() * i->VFront * GetWorld()->GetDeltaSeconds() * 45.0f);
-				this->AddMovementInput(this->GetActorRightVector() * i->VRight * GetWorld()->GetDeltaSeconds() * 45.0f);
+				FVector DirectionX = FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::X);
+				DirectionX.Z = 0.0f;
+				DirectionX.Normalize();
+				MoveDirection += DirectionX * FMath::Clamp(i->VFront, -1.0f, 1.0f);
+				FVector DirectionY = FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::Y);
+				DirectionY.Z = 0.0f;
+				DirectionY.Normalize();
+				MoveDirection += DirectionY * FMath::Clamp(i->VRight, -1.0f, 1.0f);
 
 				if (i->isJump)
 				{
 					this->Jump();
+					i->isJump = false;
 				}
 
 				if (i->isCrouch)
@@ -307,5 +338,9 @@ void ASCharacter::OtherPlayerMove()
 				break;
 			}
 		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Red, FString::Printf(TEXT("My Velocity: %f"), GetVelocity().X * Delta));
 	}
 }

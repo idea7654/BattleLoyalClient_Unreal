@@ -183,7 +183,7 @@ void ABPlayerController::GetPacket()
 			auto RecvData = static_cast<const S2C_PICKUP_GUN*>(message->packet());
 			std::string userNick = RecvData->nickname()->c_str();
 			int32 gunNum = RecvData->gunnum();
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("Debug %s"), FString(userNick.c_str())));
+			
 			if (userNick != Socket->Nickname)
 			{
 				for (auto &gun : Guns)
@@ -200,14 +200,15 @@ void ABPlayerController::GetPacket()
 					if (chara->GetName() == FString(userNick.c_str()))
 					{
 						SpawnedCharacter = chara;
+						break;
 					}
 				}
 				TargetGun->SetActorEnableCollision(false);
 				TargetGun->SetOwner(SpawnedCharacter);
 				TargetGun->AttachToComponent(SpawnedCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SpawnedCharacter->WeaponAttachSocketName);
 				SpawnedCharacter->hasGun = true;
-				
 			}
+			break;
 		}
 
 		default:
