@@ -322,11 +322,29 @@ uint8_t* ClientSocket::WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator
 uint8_t * ClientSocket::WRITE_PU_C2S_PICKUP_GUN(int32 & refLength, int32 gunNum)
 {
 	if (Nickname == "") return NULL;
-	UE_LOG(LogTemp, Warning, TEXT("%d"), gunNum);
+
 	auto userNick = builder.CreateString(Nickname);
 
-	auto makePacket = CreateS2C_PICKUP_GUN(builder, userNick, gunNum);
+	auto makePacket = CreateC2S_PICKUP_GUN(builder, userNick, gunNum);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_PICKUP_GUN, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t * ClientSocket::WRITE_PU_C2S_SHOOT(int32 & refLength, std::string target, float Damage)
+{
+	if (Nickname == "") return NULL;
+	
+	auto userNick = builder.CreateString(Nickname);
+	auto targetActor = builder.CreateString(target);
+	auto makePacket = CreateC2S_SHOOT(builder, userNick, targetActor, Damage);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_SHOOT, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

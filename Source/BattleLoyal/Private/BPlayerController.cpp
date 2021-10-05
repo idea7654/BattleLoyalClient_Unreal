@@ -167,6 +167,8 @@ void ABPlayerController::GetPacket()
 				if (Socket->players[i]->Nickname == userNick)
 				{
 					Socket->players[i]->Yaw = RecvData->dir()->z();
+					Socket->players[i]->Roll = RecvData->dir()->x();
+					Socket->players[i]->Pitch = RecvData->dir()->y();
 
 					Socket->players[i]->VFront = RecvData->vfront();
 					Socket->players[i]->VRight = RecvData->vright();
@@ -207,8 +209,28 @@ void ABPlayerController::GetPacket()
 				TargetGun->SetOwner(SpawnedCharacter);
 				TargetGun->AttachToComponent(SpawnedCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SpawnedCharacter->WeaponAttachSocketName);
 				SpawnedCharacter->hasGun = true;
+				SpawnedCharacter->CurrentWeapon = TargetGun;
 			}
 			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_SHOOT:
+		{
+			auto RecvData = static_cast<const S2C_SHOOT*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			std::string targetNick = RecvData->target()->c_str();
+			float damage = RecvData->damage();
+			for (auto &chara : Characters)
+			{
+				if (chara->GetName() == FString(userNick.c_str()))
+				{
+					chara->StartFire();
+				}
+
+				if (chara->GetName() == FString(targetNick.c_str()))
+				{
+					UGameplayStatics::ApplyDamage(chara, damage, chara->GetController(), nullptr, NULL);
+				}
+			}
 		}
 
 		default:

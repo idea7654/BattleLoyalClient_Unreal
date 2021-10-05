@@ -8,6 +8,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Camera/CameraShake.h"
+#include "SCharacter.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines for Weapons"), ECVF_Cheat);
@@ -25,6 +26,8 @@ ASWeapon::ASWeapon()
 	BaseDamage = 20.0f; //무기별
 
 	RateOfFire = 600; //무기별
+
+	Socket = ClientSocket::GetSingleton();
 }
 
 // Called when the game starts or when spawned
@@ -71,7 +74,19 @@ void ASWeapon::Fire()
 			{
 				ActualDamage *= 4.0f;
 			}
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			//UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+
+			ASCharacter *targetCharacter = Cast<ASCharacter>(HitActor);
+			int32 size = 0;
+			if (targetCharacter != nullptr)
+			{
+				uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, TCHAR_TO_ANSI(*targetCharacter->GetName()), ActualDamage);
+				Socket->WriteTo(packet, size);
+			}
+			else {
+				uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, "", 0.0f);
+				Socket->WriteTo(packet, size);
+			}
 
 			UParticleSystem *SelectedEffect = nullptr;
 			switch (SurfaceType)
@@ -104,14 +119,15 @@ void ASWeapon::Fire()
 
 void ASWeapon::StartFire()
 {
-	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
+	//float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
-	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+	//GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+	Fire();
 }
 
 void ASWeapon::StopFire()
 {
-	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
+	//GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
 
 void ASWeapon::PlayFireEffects(FVector TraceEnd)

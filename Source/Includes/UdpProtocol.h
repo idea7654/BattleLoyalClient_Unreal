@@ -17,6 +17,9 @@ struct S2C_MOVEBuilder;
 struct S2C_SHOOT;
 struct S2C_SHOOTBuilder;
 
+struct C2S_SHOOT;
+struct C2S_SHOOTBuilder;
+
 struct C2S_MOVE;
 struct C2S_MOVEBuilder;
 
@@ -72,30 +75,32 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
   MESSAGE_ID_S2C_SHOOT = 2,
-  MESSAGE_ID_C2S_MOVE = 3,
-  MESSAGE_ID_C2S_EXTEND_SESSION = 4,
-  MESSAGE_ID_C2S_REQUEST_LOGIN = 5,
-  MESSAGE_ID_C2S_REQUEST_REGISTER = 6,
-  MESSAGE_ID_S2C_COMPLETE_LOGIN = 7,
-  MESSAGE_ID_S2C_COMPLETE_REGISTER = 8,
-  MESSAGE_ID_S2C_LOGIN_ERROR = 9,
-  MESSAGE_ID_S2C_REGISTER_ERROR = 10,
-  MESSAGE_ID_C2S_START_MATCHING = 11,
-  MESSAGE_ID_C2S_CANCEL_MATCHING = 12,
-  MESSAGE_ID_S2C_GAME_START = 13,
-  MESSAGE_ID_C2S_PICKUP_GUN = 14,
-  MESSAGE_ID_S2C_PICKUP_GUN = 15,
-  MESSAGE_ID_S2C_USER_NOT_FOUND = 16,
-  MESSAGE_ID_S2C_USER_DISCONNECT = 17,
+  MESSAGE_ID_C2S_SHOOT = 3,
+  MESSAGE_ID_C2S_MOVE = 4,
+  MESSAGE_ID_C2S_EXTEND_SESSION = 5,
+  MESSAGE_ID_C2S_REQUEST_LOGIN = 6,
+  MESSAGE_ID_C2S_REQUEST_REGISTER = 7,
+  MESSAGE_ID_S2C_COMPLETE_LOGIN = 8,
+  MESSAGE_ID_S2C_COMPLETE_REGISTER = 9,
+  MESSAGE_ID_S2C_LOGIN_ERROR = 10,
+  MESSAGE_ID_S2C_REGISTER_ERROR = 11,
+  MESSAGE_ID_C2S_START_MATCHING = 12,
+  MESSAGE_ID_C2S_CANCEL_MATCHING = 13,
+  MESSAGE_ID_S2C_GAME_START = 14,
+  MESSAGE_ID_C2S_PICKUP_GUN = 15,
+  MESSAGE_ID_S2C_PICKUP_GUN = 16,
+  MESSAGE_ID_S2C_USER_NOT_FOUND = 17,
+  MESSAGE_ID_S2C_USER_DISCONNECT = 18,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
   MESSAGE_ID_MAX = MESSAGE_ID_S2C_USER_DISCONNECT
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[18] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[19] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
     MESSAGE_ID_S2C_SHOOT,
+    MESSAGE_ID_C2S_SHOOT,
     MESSAGE_ID_C2S_MOVE,
     MESSAGE_ID_C2S_EXTEND_SESSION,
     MESSAGE_ID_C2S_REQUEST_LOGIN,
@@ -116,10 +121,11 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[18] {
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[19] = {
+  static const char * const names[20] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
+    "C2S_SHOOT",
     "C2S_MOVE",
     "C2S_EXTEND_SESSION",
     "C2S_REQUEST_LOGIN",
@@ -156,6 +162,10 @@ template<> struct MESSAGE_IDTraits<S2C_MOVE> {
 
 template<> struct MESSAGE_IDTraits<S2C_SHOOT> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_SHOOT;
+};
+
+template<> struct MESSAGE_IDTraits<C2S_SHOOT> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_C2S_SHOOT;
 };
 
 template<> struct MESSAGE_IDTraits<C2S_MOVE> {
@@ -269,6 +279,9 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_SHOOT *packet_as_S2C_SHOOT() const {
     return packet_type() == MESSAGE_ID_S2C_SHOOT ? static_cast<const S2C_SHOOT *>(packet()) : nullptr;
   }
+  const C2S_SHOOT *packet_as_C2S_SHOOT() const {
+    return packet_type() == MESSAGE_ID_C2S_SHOOT ? static_cast<const C2S_SHOOT *>(packet()) : nullptr;
+  }
   const C2S_MOVE *packet_as_C2S_MOVE() const {
     return packet_type() == MESSAGE_ID_C2S_MOVE ? static_cast<const C2S_MOVE *>(packet()) : nullptr;
   }
@@ -329,6 +342,10 @@ template<> inline const S2C_MOVE *Message::packet_as<S2C_MOVE>() const {
 
 template<> inline const S2C_SHOOT *Message::packet_as<S2C_SHOOT>() const {
   return packet_as_S2C_SHOOT();
+}
+
+template<> inline const C2S_SHOOT *Message::packet_as<C2S_SHOOT>() const {
+  return packet_as_C2S_SHOOT();
 }
 
 template<> inline const C2S_MOVE *Message::packet_as<C2S_MOVE>() const {
@@ -560,25 +577,26 @@ inline flatbuffers::Offset<S2C_MOVE> CreateS2C_MOVEDirect(
 struct S2C_SHOOT FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef S2C_SHOOTBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_NICK_NAME = 4,
-    VT_POS = 6,
-    VT_DIR = 8
+    VT_NICKNAME = 4,
+    VT_TARGET = 6,
+    VT_DAMAGE = 8
   };
-  const flatbuffers::String *nick_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_NICK_NAME);
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
   }
-  const Vec3 *pos() const {
-    return GetStruct<const Vec3 *>(VT_POS);
+  const flatbuffers::String *target() const {
+    return GetPointer<const flatbuffers::String *>(VT_TARGET);
   }
-  const Vec3 *dir() const {
-    return GetStruct<const Vec3 *>(VT_DIR);
+  float damage() const {
+    return GetField<float>(VT_DAMAGE, 0.0f);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_NICK_NAME) &&
-           verifier.VerifyString(nick_name()) &&
-           VerifyField<Vec3>(verifier, VT_POS) &&
-           VerifyField<Vec3>(verifier, VT_DIR) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<float>(verifier, VT_DAMAGE) &&
            verifier.EndTable();
   }
 };
@@ -587,14 +605,14 @@ struct S2C_SHOOTBuilder {
   typedef S2C_SHOOT Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_nick_name(flatbuffers::Offset<flatbuffers::String> nick_name) {
-    fbb_.AddOffset(S2C_SHOOT::VT_NICK_NAME, nick_name);
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(S2C_SHOOT::VT_NICKNAME, nickname);
   }
-  void add_pos(const Vec3 *pos) {
-    fbb_.AddStruct(S2C_SHOOT::VT_POS, pos);
+  void add_target(flatbuffers::Offset<flatbuffers::String> target) {
+    fbb_.AddOffset(S2C_SHOOT::VT_TARGET, target);
   }
-  void add_dir(const Vec3 *dir) {
-    fbb_.AddStruct(S2C_SHOOT::VT_DIR, dir);
+  void add_damage(float damage) {
+    fbb_.AddElement<float>(S2C_SHOOT::VT_DAMAGE, damage, 0.0f);
   }
   explicit S2C_SHOOTBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -609,27 +627,105 @@ struct S2C_SHOOTBuilder {
 
 inline flatbuffers::Offset<S2C_SHOOT> CreateS2C_SHOOT(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> nick_name = 0,
-    const Vec3 *pos = 0,
-    const Vec3 *dir = 0) {
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    flatbuffers::Offset<flatbuffers::String> target = 0,
+    float damage = 0.0f) {
   S2C_SHOOTBuilder builder_(_fbb);
-  builder_.add_dir(dir);
-  builder_.add_pos(pos);
-  builder_.add_nick_name(nick_name);
+  builder_.add_damage(damage);
+  builder_.add_target(target);
+  builder_.add_nickname(nickname);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<S2C_SHOOT> CreateS2C_SHOOTDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const char *nick_name = nullptr,
-    const Vec3 *pos = 0,
-    const Vec3 *dir = 0) {
-  auto nick_name__ = nick_name ? _fbb.CreateString(nick_name) : 0;
+    const char *nickname = nullptr,
+    const char *target = nullptr,
+    float damage = 0.0f) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
   return CreateS2C_SHOOT(
       _fbb,
-      nick_name__,
-      pos,
-      dir);
+      nickname__,
+      target__,
+      damage);
+}
+
+struct C2S_SHOOT FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef C2S_SHOOTBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_TARGET = 6,
+    VT_DAMAGE = 8
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  const flatbuffers::String *target() const {
+    return GetPointer<const flatbuffers::String *>(VT_TARGET);
+  }
+  float damage() const {
+    return GetField<float>(VT_DAMAGE, 0.0f);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<float>(verifier, VT_DAMAGE) &&
+           verifier.EndTable();
+  }
+};
+
+struct C2S_SHOOTBuilder {
+  typedef C2S_SHOOT Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(C2S_SHOOT::VT_NICKNAME, nickname);
+  }
+  void add_target(flatbuffers::Offset<flatbuffers::String> target) {
+    fbb_.AddOffset(C2S_SHOOT::VT_TARGET, target);
+  }
+  void add_damage(float damage) {
+    fbb_.AddElement<float>(C2S_SHOOT::VT_DAMAGE, damage, 0.0f);
+  }
+  explicit C2S_SHOOTBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<C2S_SHOOT> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<C2S_SHOOT>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<C2S_SHOOT> CreateC2S_SHOOT(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    flatbuffers::Offset<flatbuffers::String> target = 0,
+    float damage = 0.0f) {
+  C2S_SHOOTBuilder builder_(_fbb);
+  builder_.add_damage(damage);
+  builder_.add_target(target);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<C2S_SHOOT> CreateC2S_SHOOTDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    const char *target = nullptr,
+    float damage = 0.0f) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return CreateC2S_SHOOT(
+      _fbb,
+      nickname__,
+      target__,
+      damage);
 }
 
 struct C2S_MOVE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -1678,6 +1774,10 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_SHOOT: {
       auto ptr = reinterpret_cast<const S2C_SHOOT *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_C2S_SHOOT: {
+      auto ptr = reinterpret_cast<const C2S_SHOOT *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case MESSAGE_ID_C2S_MOVE: {

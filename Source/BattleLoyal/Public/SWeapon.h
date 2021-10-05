@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ClientSocket.h"
 #include "SWeapon.generated.h"
 
 class USkeletalMeshComponent;
@@ -67,6 +68,8 @@ protected:
 	float RateOfFire;
 
 	float TimeBetweenShots;
+
+	ClientSocket *Socket;
 public:
 	//UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StartFire();

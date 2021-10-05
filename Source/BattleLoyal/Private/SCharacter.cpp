@@ -11,6 +11,7 @@
 #include "SHealthComponent.h"
 #include "Math/Quat.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/ProgressBar.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -58,6 +59,8 @@ void ASCharacter::BeginPlay()
 	GameUI->AddToViewport(9999);
 
 	Socket = ClientSocket::GetSingleton();
+
+	HealthAmount = 100.0f;
 }
 
 void ASCharacter::BeginCrouch()
@@ -148,6 +151,7 @@ void ASCharacter::JumpFunc()
 
 void ASCharacter::OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
+	//packet here
 	if (Health <= 0.0f && !bDied)
 	{
 		//Die!
@@ -159,6 +163,26 @@ void ASCharacter::OnHealthChanged(USHealthComponent* InHealthComp, float Health,
 
 		SetLifeSpan(10.0f);
 	}
+}
+
+float ASCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	HealthAmount -= DamageAmount;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Debug %f"), DamageAmount));
+	if (HealthAmount <= 0.0f && !bDied)
+	{
+		//Die!
+		bDied = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(10.0f);
+	}
+
+	GameUI->ProgressBar_HP->SetPercent(HealthAmount / 100.0f);
+	return DamageAmount;
 }
 
 void ASCharacter::SearchObjects()
@@ -198,7 +222,7 @@ void ASCharacter::Move(float Delta)
 	}
 
 	MoveDirection.Normalize();
-	AddMovementInput(MoveDirection, 45.0f * Delta);
+	AddMovementInput(MoveDirection, 1.0f);
 	MoveDirection.Set(0.0f, 0.0f, 0.0f);
 }
 
@@ -311,10 +335,7 @@ void ASCharacter::OtherPlayerMove(float Delta)
 		{
 			if (FString(i->Nickname.c_str()) == this->GetName()) //이 캐릭터 클래스 이름과..소켓에서 넘어온 이름
 			{
-				SetActorRelativeRotation(FRotator(0.0f, i->Yaw, 0.0f));
-				GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Yellow, FString::Printf(TEXT("Other Velocity: %f"), GetVelocity().X * Delta));
-				//this->AddMovementInput(this->GetActorForwardVector(), i->VFront * Delta * 45.0f);
-				//this->AddMovementInput(this->GetActorRightVector(), i->VRight * Delta * 45.0f);
+				SetActorRelativeRotation(FRotator(i->Roll, i->Yaw, i->Pitch));
 
 				FVector DirectionX = FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::X);
 				DirectionX.Z = 0.0f;
@@ -338,9 +359,5 @@ void ASCharacter::OtherPlayerMove(float Delta)
 				break;
 			}
 		}
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Red, FString::Printf(TEXT("My Velocity: %f"), GetVelocity().X * Delta));
 	}
 }

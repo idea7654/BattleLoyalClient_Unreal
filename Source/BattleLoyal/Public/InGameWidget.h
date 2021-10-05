@@ -24,6 +24,9 @@ public:
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation *Notify_Interact;
 
+	UPROPERTY(meta = (BindWidget))
+	class UProgressBar *ProgressBar_HP;
+
 	UFUNCTION()
 	void ShowInteractText();
 

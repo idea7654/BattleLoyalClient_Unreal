@@ -56,19 +56,16 @@ protected:
 	void BeginZoom();
 	void EndZoom();
 
-	ASWeapon *CurrentWeapon;
-	ASWeapon *DetectedWeapon;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 
-	void StartFire();
-	void StopFire();
 	void CheckMove();
 	void JumpFunc();
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 	bool bDied;
@@ -104,6 +101,8 @@ protected:
 	//UFUNCTION()
 	void Move(float Delta);
 
+	float HealthAmount;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -118,6 +117,12 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocketName;
+
+	void StartFire();
+	void StopFire();
+
+	ASWeapon *CurrentWeapon;
+	ASWeapon *DetectedWeapon;
 private:
 	ClientSocket	*Socket;
 };
