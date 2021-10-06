@@ -56,7 +56,6 @@ void ASCharacter::BeginPlay()
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 
 	GameUI = CreateWidget<UInGameWidget>(GetWorld(), GameUISub);
-	GameUI->AddToViewport(9999);
 
 	Socket = ClientSocket::GetSingleton();
 
@@ -224,6 +223,11 @@ void ASCharacter::Move(float Delta)
 	MoveDirection.Normalize();
 	AddMovementInput(MoveDirection, 1.0f);
 	MoveDirection.Set(0.0f, 0.0f, 0.0f);
+}
+
+void ASCharacter::SetUIMine()
+{
+	GameUI->AddToViewport(9999);
 }
 
 // Called every frame

@@ -123,6 +123,9 @@ public:
 
 	ASWeapon *CurrentWeapon;
 	ASWeapon *DetectedWeapon;
+
+	UFUNCTION()
+	void SetUIMine();
 private:
 	ClientSocket	*Socket;
 };

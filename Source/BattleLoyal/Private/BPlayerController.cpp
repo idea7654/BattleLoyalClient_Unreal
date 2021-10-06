@@ -93,6 +93,7 @@ void ABPlayerController::SetPlayers()
 		}
 	}
 	OnPossess(SpawnedCharacter);
+	SpawnedCharacter->SetUIMine();
 
 	for (auto &gun : Socket->Guns)
 	{
