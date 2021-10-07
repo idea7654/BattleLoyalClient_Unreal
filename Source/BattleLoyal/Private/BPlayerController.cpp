@@ -15,7 +15,7 @@
 ABPlayerController::ABPlayerController()
 {
 	Socket = ClientSocket::GetSingleton();
-
+	
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -53,6 +53,7 @@ void ABPlayerController::BeginPlay()
 		bool c = Socket->StartListen();
 		
 	}
+	Socket->SetPlayerController(this);
 	GetWorld()->GetTimerManager().SetTimer(Timer, this, &ABPlayerController::ResetSessionTime, 1.0f, true);
 }
 
@@ -124,6 +125,9 @@ void ABPlayerController::GetPacket()
 		const Message *message = Socket->MessageQueue.front();
 		Socket->MessageQueue.pop();
 		Socket->QueueMutex.unlock();
+		if (message == nullptr)
+			continue;
+
 		auto protocol = message->packet_type();
 
 		switch (protocol)
@@ -229,9 +233,37 @@ void ABPlayerController::GetPacket()
 
 				if (chara->GetName() == FString(targetNick.c_str()))
 				{
-					UGameplayStatics::ApplyDamage(chara, damage, chara->GetController(), nullptr, NULL);
+					//UGameplayStatics::ApplyDamage(chara, damage, chara->GetController(), nullptr, NULL);
+					chara->HealthAmount -= damage;
+					chara->SetHPUI();
 				}
 			}
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_PLAYER_DIE:
+		{
+			auto RecvData = static_cast<const S2C_PLAYER_DIE*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			std::string targetNick = RecvData->target()->c_str();
+
+			for (auto &chara : Characters)
+			{
+				if (chara->GetName() == FString(userNick.c_str()))
+				{
+					chara->StartFire();
+				}
+
+				if (chara->GetName() == FString(targetNick.c_str()))
+				{
+					chara->HealthAmount = 0.0f;
+					chara->SetHPUI();
+					chara->SetDie();
+					Characters.Remove(chara);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("%s Kill %s"), *FString(userNick.c_str()), *FString(targetNick.c_str())));
+				}
+			}
+
+			break;
 		}
 
 		default:

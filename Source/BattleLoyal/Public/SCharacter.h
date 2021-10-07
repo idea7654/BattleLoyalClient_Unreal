@@ -101,8 +101,6 @@ protected:
 	//UFUNCTION()
 	void Move(float Delta);
 
-	float HealthAmount;
-
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -126,6 +124,15 @@ public:
 
 	UFUNCTION()
 	void SetUIMine();
+
+	UPROPERTY()
+	float HealthAmount;
+
+	UFUNCTION()
+	void SetHPUI();
+
+	UFUNCTION()
+	void SetDie();
 private:
 	ClientSocket	*Socket;
 };

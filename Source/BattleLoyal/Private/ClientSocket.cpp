@@ -31,7 +31,7 @@ uint32 ClientSocket::Run()
 	//UE_LOG(LogTemp, Warning, TEXT("Start Thread"));
 	FPlatformProcess::Sleep(0.03);
 	
-	while (StopTaskCounter.GetValue() == 0 && isStart)
+	while (StopTaskCounter.GetValue() == 0 && PlayerController)
 	{
 		RecvFrom();
 	}
@@ -233,6 +233,14 @@ void ClientSocket::SendReliable()
 	memset(AckByte, 0, sizeof(AckByte));
 	memcpy(AckByte, &Ack, sizeof(int32));
 	int32 returnVal = sendto(mSocket, AckByte, sizeof(AckByte), 0, (SOCKADDR*)&mServerInfo, sizeof(mServerInfo));
+}
+
+void ClientSocket::SetPlayerController(ABPlayerController * playerController)
+{
+	if (playerController)
+	{
+		PlayerController = playerController;
+	}
 }
 
 uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength)

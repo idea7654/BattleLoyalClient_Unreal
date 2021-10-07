@@ -12,6 +12,7 @@
 #include "Math/Quat.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/ProgressBar.h"
+#include "BPlayerController.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -151,17 +152,23 @@ void ASCharacter::JumpFunc()
 void ASCharacter::OnHealthChanged(USHealthComponent* InHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	//packet here
-	if (Health <= 0.0f && !bDied)
-	{
-		//Die!
-		bDied = true;
-		GetMovementComponent()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//if (Health <= 0.0f && !bDied)
+	//{
+	//	//Die!
+	//	bDied = true;
+	//	GetMovementComponent()->StopMovementImmediately();
+	//	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		DetachFromControllerPendingDestroy();
+	//	DetachFromControllerPendingDestroy();
 
-		SetLifeSpan(10.0f);
-	}
+	//	SetLifeSpan(10.0f);
+
+	//	ABPlayerController *BController = Cast<ABPlayerController>(Controller);
+	//	if (BController)
+	//	{
+	//		BController->Characters.Remove(this);
+	//	}
+	//}
 }
 
 float ASCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -178,9 +185,14 @@ float ASCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEve
 		DetachFromControllerPendingDestroy();
 
 		SetLifeSpan(10.0f);
+
+		ABPlayerController *BController = Cast<ABPlayerController>(Controller);
+		if (BController)
+		{
+			BController->Characters.Remove(this);
+		}
 	}
 
-	GameUI->ProgressBar_HP->SetPercent(HealthAmount / 100.0f);
 	return DamageAmount;
 }
 
@@ -228,6 +240,26 @@ void ASCharacter::Move(float Delta)
 void ASCharacter::SetUIMine()
 {
 	GameUI->AddToViewport(9999);
+}
+
+void ASCharacter::SetHPUI()
+{
+	GameUI->ProgressBar_HP->SetPercent(HealthAmount / 100.0f);
+}
+
+void ASCharacter::SetDie()
+{
+	if (!bDied)
+	{
+		//Die!
+		bDied = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(10.0f);
+	}
 }
 
 // Called every frame

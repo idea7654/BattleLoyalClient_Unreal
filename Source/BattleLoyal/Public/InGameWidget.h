@@ -27,8 +27,17 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar *ProgressBar_HP;
 
+	UPROPERTY(meta = (BindWidget))
+	class UImage *GameOver;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation *GameOverAnim;
+
 	UFUNCTION()
 	void ShowInteractText();
+
+	UFUNCTION()
+	void ShowGameOver();
 
 	void NativeConstruct() override;
 };

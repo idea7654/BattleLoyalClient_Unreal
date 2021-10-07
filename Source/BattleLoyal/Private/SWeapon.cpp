@@ -76,18 +76,21 @@ void ASWeapon::Fire()
 			}
 			//UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-			ASCharacter *targetCharacter = Cast<ASCharacter>(HitActor);
-			int32 size = 0;
-			if (targetCharacter != nullptr)
+			if (MyOwner->GetName() == FString(Socket->Nickname.c_str()))
 			{
-				uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, TCHAR_TO_ANSI(*targetCharacter->GetName()), ActualDamage);
-				Socket->WriteTo(packet, size);
+				ASCharacter *targetCharacter = Cast<ASCharacter>(HitActor);
+				int32 size = 0;
+				if (targetCharacter != nullptr)
+				{
+					uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, TCHAR_TO_ANSI(*targetCharacter->GetName()), ActualDamage);
+					Socket->WriteTo(packet, size);
+				}
+				else {
+					uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, "", 0.0f);
+					Socket->WriteTo(packet, size);
+				}
 			}
-			else {
-				uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, "", 0.0f);
-				Socket->WriteTo(packet, size);
-			}
-
+			
 			UParticleSystem *SelectedEffect = nullptr;
 			switch (SurfaceType)
 			{

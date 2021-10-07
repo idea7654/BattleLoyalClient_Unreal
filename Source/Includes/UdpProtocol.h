@@ -71,6 +71,9 @@ struct S2C_USER_NOT_FOUNDBuilder;
 struct S2C_USER_DISCONNECT;
 struct S2C_USER_DISCONNECTBuilder;
 
+struct S2C_PLAYER_DIE;
+struct S2C_PLAYER_DIEBuilder;
+
 enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
@@ -91,11 +94,12 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_S2C_PICKUP_GUN = 16,
   MESSAGE_ID_S2C_USER_NOT_FOUND = 17,
   MESSAGE_ID_S2C_USER_DISCONNECT = 18,
+  MESSAGE_ID_S2C_PLAYER_DIE = 19,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
-  MESSAGE_ID_MAX = MESSAGE_ID_S2C_USER_DISCONNECT
+  MESSAGE_ID_MAX = MESSAGE_ID_S2C_PLAYER_DIE
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[19] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[20] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
@@ -115,13 +119,14 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[19] {
     MESSAGE_ID_C2S_PICKUP_GUN,
     MESSAGE_ID_S2C_PICKUP_GUN,
     MESSAGE_ID_S2C_USER_NOT_FOUND,
-    MESSAGE_ID_S2C_USER_DISCONNECT
+    MESSAGE_ID_S2C_USER_DISCONNECT,
+    MESSAGE_ID_S2C_PLAYER_DIE
   };
   return values;
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[20] = {
+  static const char * const names[21] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
@@ -141,13 +146,14 @@ inline const char * const *EnumNamesMESSAGE_ID() {
     "S2C_PICKUP_GUN",
     "S2C_USER_NOT_FOUND",
     "S2C_USER_DISCONNECT",
+    "S2C_PLAYER_DIE",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameMESSAGE_ID(MESSAGE_ID e) {
-  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_USER_DISCONNECT)) return "";
+  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_PLAYER_DIE)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMESSAGE_ID()[index];
 }
@@ -226,6 +232,10 @@ template<> struct MESSAGE_IDTraits<S2C_USER_NOT_FOUND> {
 
 template<> struct MESSAGE_IDTraits<S2C_USER_DISCONNECT> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_USER_DISCONNECT;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_PLAYER_DIE> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_PLAYER_DIE;
 };
 
 bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type);
@@ -327,6 +337,9 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_USER_DISCONNECT *packet_as_S2C_USER_DISCONNECT() const {
     return packet_type() == MESSAGE_ID_S2C_USER_DISCONNECT ? static_cast<const S2C_USER_DISCONNECT *>(packet()) : nullptr;
   }
+  const S2C_PLAYER_DIE *packet_as_S2C_PLAYER_DIE() const {
+    return packet_type() == MESSAGE_ID_S2C_PLAYER_DIE ? static_cast<const S2C_PLAYER_DIE *>(packet()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PACKET_TYPE) &&
@@ -406,6 +419,10 @@ template<> inline const S2C_USER_NOT_FOUND *Message::packet_as<S2C_USER_NOT_FOUN
 
 template<> inline const S2C_USER_DISCONNECT *Message::packet_as<S2C_USER_DISCONNECT>() const {
   return packet_as_S2C_USER_DISCONNECT();
+}
+
+template<> inline const S2C_PLAYER_DIE *Message::packet_as<S2C_PLAYER_DIE>() const {
+  return packet_as_S2C_PLAYER_DIE();
 }
 
 struct MessageBuilder {
@@ -1763,6 +1780,71 @@ inline flatbuffers::Offset<S2C_USER_DISCONNECT> CreateS2C_USER_DISCONNECTDirect(
       nickname__);
 }
 
+struct S2C_PLAYER_DIE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_PLAYER_DIEBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_TARGET = 6
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  const flatbuffers::String *target() const {
+    return GetPointer<const flatbuffers::String *>(VT_TARGET);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_PLAYER_DIEBuilder {
+  typedef S2C_PLAYER_DIE Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(S2C_PLAYER_DIE::VT_NICKNAME, nickname);
+  }
+  void add_target(flatbuffers::Offset<flatbuffers::String> target) {
+    fbb_.AddOffset(S2C_PLAYER_DIE::VT_TARGET, target);
+  }
+  explicit S2C_PLAYER_DIEBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_PLAYER_DIE> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_PLAYER_DIE>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_PLAYER_DIE> CreateS2C_PLAYER_DIE(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    flatbuffers::Offset<flatbuffers::String> target = 0) {
+  S2C_PLAYER_DIEBuilder builder_(_fbb);
+  builder_.add_target(target);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<S2C_PLAYER_DIE> CreateS2C_PLAYER_DIEDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    const char *target = nullptr) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return CreateS2C_PLAYER_DIE(
+      _fbb,
+      nickname__,
+      target__);
+}
+
 inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type) {
   switch (type) {
     case MESSAGE_ID_NONE: {
@@ -1838,6 +1920,10 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_USER_DISCONNECT: {
       auto ptr = reinterpret_cast<const S2C_USER_DISCONNECT *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_PLAYER_DIE: {
+      auto ptr = reinterpret_cast<const S2C_PLAYER_DIE *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

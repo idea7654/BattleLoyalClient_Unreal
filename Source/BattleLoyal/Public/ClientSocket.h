@@ -102,6 +102,9 @@ public: //For Game Thread
 
 	UPROPERTY(VisibleAnywhere, Category = "Spawning")
 	TArray<TSharedPtr<Gun>>		Guns;
+
+	void SetPlayerController(class ABPlayerController *playerController);
+
 private:
 	char			mReadBuffer[MAX_BUFFER_LENGTH];
 	char			mWriteBuffer[MAX_BUFFER_LENGTH];
@@ -109,7 +112,7 @@ private:
 	SOCKADDR_IN		mServerInfo;
 	WSADATA			mWsaData;
 	int32			mPacketNumber = 2;
-
+	class ABPlayerController *PlayerController;
 public:
 	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_START_MATCHING(int32 &refLength);
