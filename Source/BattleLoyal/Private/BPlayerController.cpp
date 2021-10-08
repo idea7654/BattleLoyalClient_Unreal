@@ -245,7 +245,7 @@ void ABPlayerController::GetPacket()
 			auto RecvData = static_cast<const S2C_PLAYER_DIE*>(message->packet());
 			std::string userNick = RecvData->nickname()->c_str();
 			std::string targetNick = RecvData->target()->c_str();
-
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("%s ÀÛµ¿ %s"), *FString(userNick.c_str()), *FString(targetNick.c_str())));
 			for (auto &chara : Characters)
 			{
 				if (chara->GetName() == FString(userNick.c_str()))
@@ -258,11 +258,30 @@ void ABPlayerController::GetPacket()
 					chara->HealthAmount = 0.0f;
 					chara->SetHPUI();
 					chara->SetDie();
-					Characters.Remove(chara);
+					removeCharacter = chara;
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("%s Kill %s"), *FString(userNick.c_str()), *FString(targetNick.c_str())));
+					chara->SetGameOver();
 				}
 			}
+			if (removeCharacter)
+			{
+				Characters.Remove(removeCharacter);
+				removeCharacter = nullptr;
+			}
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_USER_VICTORY:
+		{
+			auto RecvData = static_cast<const S2C_USER_VICTORY*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
 
+			for (auto &chara : Characters)
+			{
+				if (chara->GetName() == FString(userNick.c_str()))
+				{
+					chara->SetVictory();
+				}
+			}
 			break;
 		}
 

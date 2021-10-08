@@ -262,6 +262,16 @@ void ASCharacter::SetDie()
 	}
 }
 
+void ASCharacter::SetGameOver()
+{
+	GameUI->ShowGameOver();
+}
+
+void ASCharacter::SetVictory()
+{
+	GameUI->ShowVictory();
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -388,7 +398,7 @@ void ASCharacter::OtherPlayerMove(float Delta)
 					i->isJump = false;
 				}
 
-				if (i->isCrouch)
+				if (i->isCrouch == true)
 					this->Crouch();
 				else
 					this->UnCrouch();

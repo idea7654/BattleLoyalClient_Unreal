@@ -33,11 +33,20 @@ public:
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation *GameOverAnim;
 
+	UPROPERTY(meta = (BindWidget))
+	class UImage *Victory;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation *VictoryAnim;
+
 	UFUNCTION()
 	void ShowInteractText();
 
 	UFUNCTION()
 	void ShowGameOver();
+
+	UFUNCTION()
+	void ShowVictory();
 
 	void NativeConstruct() override;
 };

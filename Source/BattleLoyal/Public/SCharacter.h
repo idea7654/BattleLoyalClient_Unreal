@@ -133,6 +133,12 @@ public:
 
 	UFUNCTION()
 	void SetDie();
+
+	UFUNCTION()
+	void SetGameOver();
+
+	UFUNCTION()
+	void SetVictory();
 private:
 	ClientSocket	*Socket;
 };

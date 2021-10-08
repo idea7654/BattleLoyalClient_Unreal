@@ -13,12 +13,18 @@ void UInGameWidget::ShowGameOver()
 	PlayAnimation(GameOverAnim);
 }
 
+void UInGameWidget::ShowVictory()
+{
+	PlayAnimation(VictoryAnim);
+}
+
 void UInGameWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	Interact->SetRenderOpacity(0.0f);
 	GameOver->SetRenderOpacity(0.0f);
+	Victory->SetRenderOpacity(0.0f);
 }
 
 void UInGameWidget::ShowInteractText()

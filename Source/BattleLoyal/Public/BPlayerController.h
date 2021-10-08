@@ -59,6 +59,9 @@ public:
 
 	UPROPERTY()
 	class ASWeapon* TargetGun;
+
+	UPROPERTY()
+	ASCharacter *removeCharacter;
 private:
 	ClientSocket	*Socket;
 	
