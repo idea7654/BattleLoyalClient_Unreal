@@ -239,7 +239,7 @@ void ASCharacter::Move(float Delta)
 
 void ASCharacter::SetUIMine()
 {
-	GameUI->AddToViewport(9999);
+	GameUI->AddToViewport(800);
 }
 
 void ASCharacter::SetHPUI()

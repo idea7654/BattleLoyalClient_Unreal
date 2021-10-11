@@ -10,6 +10,7 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "LoadingWidget.h"
 #include "SWeapon.h"
 
 ABPlayerController::ABPlayerController()
@@ -45,14 +46,9 @@ void ABPlayerController::Tick(float DeltaSeconds)
 void ABPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	if (GetWorld()->GetName() == "Login")
-	{
-		bool a = Socket->Begin();
-		bool b = Socket->Bind();
-		Socket->isStart = true;
-		bool c = Socket->StartListen();
-		
-	}
+	Socket->Begin();
+	Socket->Bind();
+	Socket->StartListen();
 	Socket->SetPlayerController(this);
 	GetWorld()->GetTimerManager().SetTimer(Timer, this, &ABPlayerController::ResetSessionTime, 1.0f, true);
 }
@@ -60,10 +56,7 @@ void ABPlayerController::BeginPlay()
 void ABPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	if (GetWorld()->GetName() == "GameLevel")
-	{
-		EndOfPlay();
-	}
+	EndOfPlay();
 	GetWorld()->GetTimerManager().ClearTimer(Timer);
 }
 
@@ -136,7 +129,14 @@ void ABPlayerController::GetPacket()
 		{
 			auto RecvData = static_cast<const S2C_COMPLETE_LOGIN*>(message->packet());
 			Socket->Nickname = RecvData->nickname()->c_str();
-			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Lobby_Sample"));
+			FLatentActionInfo info;
+			info.CallbackTarget = this;
+			info.ExecutionFunction = FName("SpawnMap");
+			info.UUID = 0;
+			info.Linkage = 0;
+
+			UGameplayStatics::UnloadStreamLevel(GetWorld(), "Login", info, false);
+
 			break;
 		}
 		case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
@@ -201,7 +201,7 @@ void ABPlayerController::GetPacket()
 						break;
 					}
 				}
-				//ASCharacter *Character;
+				
 				for (auto &chara : Characters)
 				{
 					if (chara->GetName() == FString(userNick.c_str()))
@@ -233,7 +233,6 @@ void ABPlayerController::GetPacket()
 
 				if (chara->GetName() == FString(targetNick.c_str()))
 				{
-					//UGameplayStatics::ApplyDamage(chara, damage, chara->GetController(), nullptr, NULL);
 					chara->HealthAmount -= damage;
 					chara->SetHPUI();
 				}
@@ -245,7 +244,7 @@ void ABPlayerController::GetPacket()
 			auto RecvData = static_cast<const S2C_PLAYER_DIE*>(message->packet());
 			std::string userNick = RecvData->nickname()->c_str();
 			std::string targetNick = RecvData->target()->c_str();
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("%s ÀÛµ¿ %s"), *FString(userNick.c_str()), *FString(targetNick.c_str())));
+
 			for (auto &chara : Characters)
 			{
 				if (chara->GetName() == FString(userNick.c_str()))
@@ -318,6 +317,35 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 		Socket->Guns.Add(gun);
 	}
 
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("GameLevel"));
+	FLatentActionInfo info;
+	info.CallbackTarget = this;
+	info.ExecutionFunction = FName("SpawnGame");
+	info.UUID = 0;
+	info.Linkage = 0;
+
+	UGameplayStatics::UnloadStreamLevel(GetWorld(), "Lobby_Sample", info, true);
 }
 
+void ABPlayerController::SpawnMap()
+{
+	FLatentActionInfo info;
+	UGameplayStatics::LoadStreamLevel(GetWorld(), "Lobby_Sample", false, false, info);
+	ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), "Lobby_Sample");
+	level->SetShouldBeVisible(true);
+}
+
+void ABPlayerController::SpawnGame()
+{
+	loading = CreateWidget<ULoadingWidget>(GetWorld(), loadingWidget);
+	loading->AddToViewport(9000);
+
+	FLatentActionInfo info;
+	UGameplayStatics::LoadStreamLevel(GetWorld(), "GameLevel", true, false, info);
+	ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), "GameLevel");
+	//level->SetShouldBeVisible(true);
+}
+
+void ABPlayerController::CancelLoading()
+{
+	loading->RemoveFromViewport();
+}

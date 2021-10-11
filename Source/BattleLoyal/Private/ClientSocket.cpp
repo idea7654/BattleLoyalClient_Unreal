@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "LoginWidget.h"
 
+#pragma comment(lib, "Ws2_32.lib")
+
 ClientSocket::ClientSocket() :StopTaskCounter(0)
 {
 
@@ -131,51 +133,11 @@ bool ClientSocket::RecvFrom()
 	QueueMutex.lock();
 	MessageQueue.push(message);
 	QueueMutex.unlock();
-	//auto protocol = message->packet_type();
 
-	//switch (protocol)
-	//{
-	//case MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN:
-	//{
-	//	auto RecvData = static_cast<const S2C_COMPLETE_LOGIN*>(message->packet());
-	//	Nickname = RecvData->nickname()->c_str();
-	//	isLoginSuccess = true;
-	//	break;
-	//}
-	//case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
-	//{
-	//	isLoginError = true;
-	//	break;
-	//}
-	//case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
-	//{
-	//	//LoadNextLevel
-	//	SendReliable();
-	//	GameStart(message);
-	//	break;
-	//}
-	//case MESSAGE_ID::MESSAGE_ID_S2C_MOVE:
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Move!!"));
-	//	auto RecvData = static_cast<const S2C_MOVE*>(message->packet());
-	//	std::string userNick = RecvData->nick_name()->c_str();
-	//	for (auto &i : players)
-	//	{
-	//		if (i->Nickname == userNick)
-	//		{
-	//			i->X = RecvData->pos()->x();
-	//			i->Y = RecvData->pos()->y();
-	//			i->Z = RecvData->pos()->z();
-	//			i->Roll = RecvData->dir()->x();
-	//			i->Pitch = RecvData->dir()->y();
-	//			i->Yaw = RecvData->dir()->z();
-	//		}
-	//	}
-	//}
-
-	//default:
-	//	break;
-	//}
+	if (message->packet_type() == MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN)
+	{
+		
+	}
 
 	return true;
 }

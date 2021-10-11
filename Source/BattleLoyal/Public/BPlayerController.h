@@ -62,6 +62,20 @@ public:
 
 	UPROPERTY()
 	ASCharacter *removeCharacter;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> loadingWidget;
+
+	UFUNCTION()
+	void SpawnMap();
+
+	UFUNCTION()
+	void SpawnGame();
+
+	UFUNCTION(BlueprintCallable)
+	void CancelLoading();
+
+	class ULoadingWidget *loading;
 private:
 	ClientSocket	*Socket;
 	
