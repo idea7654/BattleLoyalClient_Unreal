@@ -91,6 +91,7 @@ public: //For Game Thread
 	bool								isLoginError = false;
 	bool								isMatching = false;
 	bool								isStart = false;
+	bool								isRegisterSuccess = false;
 	std::string							Nickname;			
 
 	std::queue<const Message*>			MessageQueue;
@@ -115,6 +116,7 @@ private:
 	class ABPlayerController *PlayerController;
 public:
 	uint8_t*		WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string password, int32 &refLength);
+	uint8_t*		WRITE_PU_C2S_REQUEST_REGISTER(std::string email, std::string nickname, std::string password, int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_START_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_CANCEL_MATCHING(int32 &refLength);
 	uint8_t*		WRITE_PU_C2S_EXTEND_SESSION(int32 &refLength);

@@ -139,6 +139,9 @@ public:
 
 	UFUNCTION()
 	void SetVictory();
+
+	UFUNCTION()
+	void SetGameInfoUI(FString action, int32 count);
 private:
 	ClientSocket	*Socket;
 };

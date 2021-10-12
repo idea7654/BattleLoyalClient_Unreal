@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ClientSocket.h"
+#include "RegisterWidget.h"
 #include "LoginWidget.generated.h"
 
 /**
@@ -42,6 +43,15 @@ public:
 
 	UFUNCTION()
 	void LoginError();
+
+	UFUNCTION()
+	void ToRegister();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> WhatWidget;
+
+	UPROPERTY()
+	URegisterWidget *RegisterWidget;
 
 	void NativeConstruct() override;
 

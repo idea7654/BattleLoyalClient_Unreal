@@ -76,6 +76,12 @@ public:
 	void CancelLoading();
 
 	class ULoadingWidget *loading;
+
+	UPROPERTY()
+	int32 PlayerCount;
+
+	UPROPERTY()
+	int32 PlayerKill;
 private:
 	ClientSocket	*Socket;
 	

@@ -222,6 +222,23 @@ uint8_t* ClientSocket::WRITE_PU_C2S_REQUEST_LOGIN(std::string email, std::string
 	return data;
 }
 
+uint8_t * ClientSocket::WRITE_PU_C2S_REQUEST_REGISTER(std::string email, std::string nickname, std::string password, int32 & refLength)
+{
+	auto userEmail = builder.CreateString(email);
+	auto userPassword = builder.CreateString(password);
+	auto userNick = builder.CreateString(nickname);
+	auto makePacket = CreateC2S_REQUEST_REGISTER(builder, userEmail, userNick, userPassword);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_REQUEST_REGISTER, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
 uint8_t* ClientSocket::WRITE_PU_C2S_START_MATCHING(int32 &refLength)
 {
 	if (Nickname == "")	return NULL;

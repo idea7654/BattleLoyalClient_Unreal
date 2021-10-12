@@ -39,6 +39,12 @@ public:
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation *VictoryAnim;
 
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock *PersonText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock *KillText;
+
 	UFUNCTION()
 	void ShowInteractText();
 
@@ -48,5 +54,14 @@ public:
 	UFUNCTION()
 	void ShowVictory();
 
+	UFUNCTION()
+	void SetPersonCount(int32 count);
+
+	UFUNCTION()
+	void SetKillCount(int32 count);
+
 	void NativeConstruct() override;
+
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 };

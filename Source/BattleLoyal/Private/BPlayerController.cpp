@@ -51,6 +51,8 @@ void ABPlayerController::BeginPlay()
 	Socket->StartListen();
 	Socket->SetPlayerController(this);
 	GetWorld()->GetTimerManager().SetTimer(Timer, this, &ABPlayerController::ResetSessionTime, 1.0f, true);
+	PlayerCount = 0;
+	PlayerKill = 0;
 }
 
 void ABPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -88,6 +90,7 @@ void ABPlayerController::SetPlayers()
 	}
 	OnPossess(SpawnedCharacter);
 	SpawnedCharacter->SetUIMine();
+	SpawnedCharacter->SetGameInfoUI("person", PlayerCount);
 
 	for (auto &gun : Socket->Guns)
 	{
@@ -142,6 +145,16 @@ void ABPlayerController::GetPacket()
 		case MESSAGE_ID::MESSAGE_ID_S2C_LOGIN_ERROR:
 		{
 			Socket->isLoginError = true;
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_REGISTER_ERROR:
+		{
+			Socket->isLoginError = true;
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_REGISTER:
+		{
+			Socket->isRegisterSuccess = true;
 			break;
 		}
 		case MESSAGE_ID::MESSAGE_ID_S2C_GAME_START:
@@ -245,11 +258,20 @@ void ABPlayerController::GetPacket()
 			std::string userNick = RecvData->nickname()->c_str();
 			std::string targetNick = RecvData->target()->c_str();
 
+			PlayerCount--;
+
 			for (auto &chara : Characters)
 			{
 				if (chara->GetName() == FString(userNick.c_str()))
 				{
 					chara->StartFire();
+					PlayerKill++;
+					chara->SetGameInfoUI("kill", PlayerKill);
+				}
+
+				if (chara->GetName() == FString(Socket->Nickname.c_str()))
+				{
+					chara->SetGameInfoUI("person", PlayerCount);
 				}
 
 				if (chara->GetName() == FString(targetNick.c_str()))
@@ -296,6 +318,8 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 	auto userLength = RecvData->userdata()->Length();
 	auto gunLength = RecvData->gundata()->Length();
 
+	PlayerCount = (int32)userLength;
+
 	for (int32 i = 0; i < (int32)userLength; i++)
 	{
 		TSharedPtr<sCharacter> chara(new sCharacter());
@@ -329,7 +353,7 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 void ABPlayerController::SpawnMap()
 {
 	FLatentActionInfo info;
-	UGameplayStatics::LoadStreamLevel(GetWorld(), "Lobby_Sample", false, false, info);
+	UGameplayStatics::LoadStreamLevel(GetWorld(), "Lobby_Sample", true, false, info);
 	ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), "Lobby_Sample");
 	level->SetShouldBeVisible(true);
 }

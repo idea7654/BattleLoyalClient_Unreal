@@ -272,6 +272,14 @@ void ASCharacter::SetVictory()
 	GameUI->ShowVictory();
 }
 
+void ASCharacter::SetGameInfoUI(FString action, int32 count)
+{
+	if (action == "kill")
+		GameUI->SetKillCount(count);
+	else
+		GameUI->SetPersonCount(count);
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {

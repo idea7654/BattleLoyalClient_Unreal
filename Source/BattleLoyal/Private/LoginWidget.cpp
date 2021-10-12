@@ -7,11 +7,20 @@
 #include "ClientSocket.h"
 #include "Animation/WidgetAnimation.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/TextBlock.h"
+
+void ULoginWidget::ToRegister()
+{
+	//RegisterWidget = CreateWidget<URegisterWidget>(GetWorld(), WhatWidget);
+	//RegisterWidget->AddToViewport(10);
+	//this->RemoveFromParent();
+}
 
 void ULoginWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	LoginButton->OnClicked.AddDynamic(this, &ULoginWidget::OnClickedLogin);
+	RegisterButton->OnClicked.AddDynamic(this, &ULoginWidget::ToRegister);
 	Password->SetIsPassword(true);
 
 	Socket = ClientSocket::GetSingleton();
