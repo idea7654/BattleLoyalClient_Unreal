@@ -279,7 +279,6 @@ void ASCharacter::SetGameInfoUI(FString action, int32 count)
 	else
 		GameUI->SetPersonCount(count);
 }
-
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {

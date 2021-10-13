@@ -89,6 +89,7 @@ protected:
 	float TurnSpeed;
 	float TurnSpeedLast;
 
+	UPROPERTY(EditAnywhere)
 	bool isJump = false;
 	bool isCrouch = false;
 	bool CurrentCrouch = false;
@@ -142,6 +143,9 @@ public:
 
 	UFUNCTION()
 	void SetGameInfoUI(FString action, int32 count);
+
+	UFUNCTION(BlueprintCallable)
+	void Attack();
 private:
 	ClientSocket	*Socket;
 };

@@ -45,6 +45,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock *KillText;
 
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock *RingTime;
+
 	UFUNCTION()
 	void ShowInteractText();
 
