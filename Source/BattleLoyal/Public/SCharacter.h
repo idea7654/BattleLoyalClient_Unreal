@@ -102,6 +102,9 @@ protected:
 	//UFUNCTION()
 	void Move(float Delta);
 
+	UFUNCTION()
+	void Attacked(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -144,8 +147,14 @@ public:
 	UFUNCTION()
 	void SetGameInfoUI(FString action, int32 count);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void Attack();
+
+	UFUNCTION()
+	void AttackEnd();
+
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent *AttackCheck;
 private:
 	ClientSocket	*Socket;
 };

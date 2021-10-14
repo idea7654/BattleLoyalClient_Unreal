@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/ProgressBar.h"
 #include "BPlayerController.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -33,6 +34,8 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
+	AttackCheck = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCheck"));
+	
 	ZoomedFOV = 65.0f;
 	ZoomInterpSpeed = 20.0f;
 
@@ -61,11 +64,14 @@ void ASCharacter::BeginPlay()
 	Socket = ClientSocket::GetSingleton();
 
 	HealthAmount = 100.0f;
+
+	AttackCheck->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttackCheck->OnComponentBeginOverlap.AddDynamic(this, &ASCharacter::Attacked);
 }
 
 void ASCharacter::BeginCrouch()
 {
-	if (!this->GetMovementComponent()->IsFalling())
+	if (!this->GetMovementComponent()->IsFalling() && hasGun)
 	{
 		Crouch();
 		CurrentCrouch = true;
@@ -125,8 +131,6 @@ void ASCharacter::CheckMove()
 {
 	if (CurrentMFV != MFV || CurrentMRV != MRV || TurnSpeed != TurnSpeedLast || isJump == true || isCrouch != CurrentCrouch)
 	{
-		//움직임 패킷
-		UE_LOG(LogTemp, Warning, TEXT("Move"));
 		if (Socket && FString(Socket->Nickname.c_str()) == this->GetName())
 		{
 			FVector userPos = this->GetActorTransform().GetLocation();
@@ -237,6 +241,14 @@ void ASCharacter::Move(float Delta)
 	MoveDirection.Set(0.0f, 0.0f, 0.0f);
 }
 
+void ASCharacter::Attacked(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && OtherComp) 
+	{ 
+		UE_LOG(LogTemp, Warning, TEXT("Attacked!"));
+	}
+}
+
 void ASCharacter::SetUIMine()
 {
 	GameUI->AddToViewport(800);
@@ -279,6 +291,26 @@ void ASCharacter::SetGameInfoUI(FString action, int32 count)
 	else
 		GameUI->SetPersonCount(count);
 }
+
+void ASCharacter::Attack()
+{
+	if (AttackCheck != nullptr)
+	{
+		AttackCheck->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+	}
+}
+
+void ASCharacter::AttackEnd()
+{
+	if (AttackCheck != nullptr)
+	{
+		AttackCheck->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		UE_LOG(LogTemp, Warning, TEXT("Attack end!"));
+	}
+}
+
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
