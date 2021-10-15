@@ -14,6 +14,7 @@
 #include "Components/ProgressBar.h"
 #include "BPlayerController.h"
 #include "Components/BoxComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -28,13 +29,12 @@ ASCharacter::ASCharacter()
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	RootComponent = GetCapsuleComponent();
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
-
-	AttackCheck = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCheck"));
 	
 	ZoomedFOV = 65.0f;
 	ZoomInterpSpeed = 20.0f;
@@ -64,9 +64,6 @@ void ASCharacter::BeginPlay()
 	Socket = ClientSocket::GetSingleton();
 
 	HealthAmount = 100.0f;
-
-	AttackCheck->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	AttackCheck->OnComponentBeginOverlap.AddDynamic(this, &ASCharacter::Attacked);
 }
 
 void ASCharacter::BeginCrouch()
@@ -241,14 +238,6 @@ void ASCharacter::Move(float Delta)
 	MoveDirection.Set(0.0f, 0.0f, 0.0f);
 }
 
-void ASCharacter::Attacked(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor && OtherComp) 
-	{ 
-		UE_LOG(LogTemp, Warning, TEXT("Attacked!"));
-	}
-}
-
 void ASCharacter::SetUIMine()
 {
 	GameUI->AddToViewport(800);
@@ -294,20 +283,29 @@ void ASCharacter::SetGameInfoUI(FString action, int32 count)
 
 void ASCharacter::Attack()
 {
-	if (AttackCheck != nullptr)
+	FHitResult HitResult;
+	FVector StartTrace = GetCapsuleComponent()->GetComponentLocation() + GetCapsuleComponent()->GetForwardVector() * 70.0f;
+	FVector EndTrace = StartTrace + (GetCapsuleComponent()->GetForwardVector() * 130.0f);
+
+	FCollisionObjectQueryParams ObjQueryParam;
+	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+	
+	if (GetWorld()->LineTraceSingleByObjectType(HitResult, StartTrace, EndTrace, ObjQueryParam))
 	{
-		AttackCheck->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+		if (HitResult.GetActor())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%d"), CurrentCombo);
+			//맞았을 때 패킷!
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Nothing Attacked"));
 	}
 }
 
 void ASCharacter::AttackEnd()
 {
-	if (AttackCheck != nullptr)
-	{
-		AttackCheck->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		UE_LOG(LogTemp, Warning, TEXT("Attack end!"));
-	}
 }
 
 
