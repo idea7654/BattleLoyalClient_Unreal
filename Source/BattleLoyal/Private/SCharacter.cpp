@@ -15,6 +15,8 @@
 #include "BPlayerController.h"
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/World.h"
+#include "Components/VerticalBox.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -283,29 +285,42 @@ void ASCharacter::SetGameInfoUI(FString action, int32 count)
 
 void ASCharacter::Attack()
 {
-	FHitResult HitResult;
-	FVector StartTrace = GetCapsuleComponent()->GetComponentLocation() + GetCapsuleComponent()->GetForwardVector() * 70.0f;
-	FVector EndTrace = StartTrace + (GetCapsuleComponent()->GetForwardVector() * 130.0f);
+	if (this->GetName() == FString(Socket->Nickname.c_str()))
+	{
+		FHitResult HitResult;
+		FVector StartTrace = GetCapsuleComponent()->GetComponentLocation() + GetCapsuleComponent()->GetForwardVector() * 100.0f;
+		FVector EndTrace = StartTrace + (GetCapsuleComponent()->GetForwardVector() * 160.0f);
 
-	FCollisionObjectQueryParams ObjQueryParam;
-	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
-	
-	if (GetWorld()->LineTraceSingleByObjectType(HitResult, StartTrace, EndTrace, ObjQueryParam))
-	{
-		if (HitResult.GetActor())
+		FCollisionObjectQueryParams ObjQueryParam;
+		ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+
+		if (GetWorld()->LineTraceSingleByObjectType(HitResult, StartTrace, EndTrace, ObjQueryParam))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%d"), CurrentCombo);
-			//맞았을 때 패킷!
+			if (HitResult.GetActor())
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("%s"), *HitResult.GetActor()->GetName());
+				//맞았을 때 패킷!
+				int32 size = 0;
+				uint8_t* packet = Socket->WRITE_PU_C2S_MELEE_ATTACK(size, TCHAR_TO_ANSI(*HitResult.GetActor()->GetName()), CurrentCombo);
+				Socket->WriteTo(packet, size);
+			}
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Nothing Attacked"));
+		else
+		{
+			int32 size = 0;
+			uint8_t* packet = Socket->WRITE_PU_C2S_MELEE_ATTACK(size, "", CurrentCombo);
+			Socket->WriteTo(packet, size);
+		}
 	}
 }
 
 void ASCharacter::AttackEnd()
 {
+}
+
+void ASCharacter::SetChild(UUserWidget * MyWidget)
+{
+	GameUI->VerticalBox_0->AddChild(MyWidget);
 }
 
 
@@ -355,6 +370,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::Interact);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ASCharacter::PlayAttack);
 }
 
 void ASCharacter::MoveForward(float Value)

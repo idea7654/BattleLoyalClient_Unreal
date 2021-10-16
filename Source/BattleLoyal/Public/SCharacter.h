@@ -158,6 +158,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxCombo;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayAttack();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void AddSlot(const FString &Killer, const FString &Target);
+
+	UFUNCTION(BlueprintCallable)
+	void SetChild(UUserWidget *MyWidget);
+
 private:
 	ClientSocket	*Socket;
 };

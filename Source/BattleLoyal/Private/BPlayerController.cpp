@@ -257,6 +257,8 @@ void ABPlayerController::GetPacket()
 			auto RecvData = static_cast<const S2C_PLAYER_DIE*>(message->packet());
 			std::string userNick = RecvData->nickname()->c_str();
 			std::string targetNick = RecvData->target()->c_str();
+			std::string type = RecvData->type()->c_str();
+			int32 combo = RecvData->combo();
 
 			PlayerCount--;
 
@@ -264,7 +266,9 @@ void ABPlayerController::GetPacket()
 			{
 				if (chara->GetName() == FString(userNick.c_str()))
 				{
-					chara->StartFire();
+					//if(type == "SHOOT")
+					//chara->StartFire();
+
 					PlayerKill++;
 					chara->SetGameInfoUI("kill", PlayerKill);
 				}
@@ -284,11 +288,13 @@ void ABPlayerController::GetPacket()
 					chara->SetGameOver();
 				}
 			}
+
 			if (removeCharacter)
 			{
 				Characters.Remove(removeCharacter);
 				removeCharacter = nullptr;
 			}
+
 			break;
 		}
 		case MESSAGE_ID::MESSAGE_ID_S2C_USER_VICTORY:
@@ -305,7 +311,43 @@ void ABPlayerController::GetPacket()
 			}
 			break;
 		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_MELEE_ATTACK:
+		{
+			auto RecvData = static_cast<const S2C_MELEE_ATTACK*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			std::string target = RecvData->target()->c_str();
+			float damage = RecvData->damage();
+			int32 combo = RecvData->combo();
 
+			for (auto &chara : Characters)
+			{
+				if (userNick != Socket->Nickname)
+				{
+					if (chara->GetName() == FString(userNick.c_str()))
+					{
+						if (combo - 1 >= 0)
+							chara->CurrentCombo = combo - 1;
+						else
+							chara->CurrentCombo = combo;
+						chara->PlayAttack();
+					}
+
+					if (chara->GetName() == FString(target.c_str()))
+					{
+						chara->HealthAmount -= damage;
+						chara->SetHPUI();
+					}
+				}
+				else
+				{
+					if (chara->GetName() == FString(Socket->Nickname.c_str()))
+					{
+						chara->AddSlot(FString(userNick.c_str()), FString(target.c_str()));
+					}
+				}
+			}
+			break;
+		}
 		default:
 			break;
 		}

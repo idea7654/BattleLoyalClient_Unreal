@@ -123,5 +123,6 @@ public:
 	uint8_t*		WRITE_PU_C2S_MOVE(int32 &refLength, FVector Pos, FRotator Dir, float vfront, float vright, float vyaw, bool isJump, bool isCrouch);
 	uint8_t*		WRITE_PU_C2S_PICKUP_GUN(int32 &refLength, int32 gunNum);
 	uint8_t*		WRITE_PU_C2S_SHOOT(int32 &refLength, std::string target, float Damage);
+	uint8_t*		WRITE_PU_C2S_MELEE_ATTACK(int32 &refLength, std::string target, int32 combo);
 };
 

@@ -134,11 +134,6 @@ bool ClientSocket::RecvFrom()
 	MessageQueue.push(message);
 	QueueMutex.unlock();
 
-	if (message->packet_type() == MESSAGE_ID::MESSAGE_ID_S2C_COMPLETE_LOGIN)
-	{
-		
-	}
-
 	return true;
 }
 
@@ -332,6 +327,24 @@ uint8_t * ClientSocket::WRITE_PU_C2S_SHOOT(int32 & refLength, std::string target
 	auto targetActor = builder.CreateString(target);
 	auto makePacket = CreateC2S_SHOOT(builder, userNick, targetActor, Damage);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_SHOOT, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t * ClientSocket::WRITE_PU_C2S_MELEE_ATTACK(int32 & refLength, std::string target, int32 combo)
+{
+	if (Nickname == "") return NULL;
+
+	auto userNick = builder.CreateString(Nickname);
+	auto targetActor = builder.CreateString(target);
+	auto makePacket = CreateC2S_MELEE_ATTACK(builder, userNick, targetActor, combo);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_MELEE_ATTACK, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

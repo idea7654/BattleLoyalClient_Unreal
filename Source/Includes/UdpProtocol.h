@@ -77,6 +77,12 @@ struct S2C_PLAYER_DIEBuilder;
 struct S2C_USER_VICTORY;
 struct S2C_USER_VICTORYBuilder;
 
+struct C2S_MELEE_ATTACK;
+struct C2S_MELEE_ATTACKBuilder;
+
+struct S2C_MELEE_ATTACK;
+struct S2C_MELEE_ATTACKBuilder;
+
 enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
@@ -99,11 +105,13 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_S2C_USER_DISCONNECT = 18,
   MESSAGE_ID_S2C_PLAYER_DIE = 19,
   MESSAGE_ID_S2C_USER_VICTORY = 20,
+  MESSAGE_ID_C2S_MELEE_ATTACK = 21,
+  MESSAGE_ID_S2C_MELEE_ATTACK = 22,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
-  MESSAGE_ID_MAX = MESSAGE_ID_S2C_USER_VICTORY
+  MESSAGE_ID_MAX = MESSAGE_ID_S2C_MELEE_ATTACK
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[21] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[23] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
@@ -125,13 +133,15 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[21] {
     MESSAGE_ID_S2C_USER_NOT_FOUND,
     MESSAGE_ID_S2C_USER_DISCONNECT,
     MESSAGE_ID_S2C_PLAYER_DIE,
-    MESSAGE_ID_S2C_USER_VICTORY
+    MESSAGE_ID_S2C_USER_VICTORY,
+    MESSAGE_ID_C2S_MELEE_ATTACK,
+    MESSAGE_ID_S2C_MELEE_ATTACK
   };
   return values;
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[22] = {
+  static const char * const names[24] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
@@ -153,13 +163,15 @@ inline const char * const *EnumNamesMESSAGE_ID() {
     "S2C_USER_DISCONNECT",
     "S2C_PLAYER_DIE",
     "S2C_USER_VICTORY",
+    "C2S_MELEE_ATTACK",
+    "S2C_MELEE_ATTACK",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameMESSAGE_ID(MESSAGE_ID e) {
-  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_USER_VICTORY)) return "";
+  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_MELEE_ATTACK)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMESSAGE_ID()[index];
 }
@@ -246,6 +258,14 @@ template<> struct MESSAGE_IDTraits<S2C_PLAYER_DIE> {
 
 template<> struct MESSAGE_IDTraits<S2C_USER_VICTORY> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_USER_VICTORY;
+};
+
+template<> struct MESSAGE_IDTraits<C2S_MELEE_ATTACK> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_C2S_MELEE_ATTACK;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_MELEE_ATTACK> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_MELEE_ATTACK;
 };
 
 bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type);
@@ -353,6 +373,12 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_USER_VICTORY *packet_as_S2C_USER_VICTORY() const {
     return packet_type() == MESSAGE_ID_S2C_USER_VICTORY ? static_cast<const S2C_USER_VICTORY *>(packet()) : nullptr;
   }
+  const C2S_MELEE_ATTACK *packet_as_C2S_MELEE_ATTACK() const {
+    return packet_type() == MESSAGE_ID_C2S_MELEE_ATTACK ? static_cast<const C2S_MELEE_ATTACK *>(packet()) : nullptr;
+  }
+  const S2C_MELEE_ATTACK *packet_as_S2C_MELEE_ATTACK() const {
+    return packet_type() == MESSAGE_ID_S2C_MELEE_ATTACK ? static_cast<const S2C_MELEE_ATTACK *>(packet()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PACKET_TYPE) &&
@@ -440,6 +466,14 @@ template<> inline const S2C_PLAYER_DIE *Message::packet_as<S2C_PLAYER_DIE>() con
 
 template<> inline const S2C_USER_VICTORY *Message::packet_as<S2C_USER_VICTORY>() const {
   return packet_as_S2C_USER_VICTORY();
+}
+
+template<> inline const C2S_MELEE_ATTACK *Message::packet_as<C2S_MELEE_ATTACK>() const {
+  return packet_as_C2S_MELEE_ATTACK();
+}
+
+template<> inline const S2C_MELEE_ATTACK *Message::packet_as<S2C_MELEE_ATTACK>() const {
+  return packet_as_S2C_MELEE_ATTACK();
 }
 
 struct MessageBuilder {
@@ -1801,7 +1835,9 @@ struct S2C_PLAYER_DIE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef S2C_PLAYER_DIEBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NICKNAME = 4,
-    VT_TARGET = 6
+    VT_TARGET = 6,
+    VT_TYPE = 8,
+    VT_COMBO = 10
   };
   const flatbuffers::String *nickname() const {
     return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
@@ -1809,12 +1845,21 @@ struct S2C_PLAYER_DIE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *target() const {
     return GetPointer<const flatbuffers::String *>(VT_TARGET);
   }
+  const flatbuffers::String *type() const {
+    return GetPointer<const flatbuffers::String *>(VT_TYPE);
+  }
+  int32_t combo() const {
+    return GetField<int32_t>(VT_COMBO, 0);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NICKNAME) &&
            verifier.VerifyString(nickname()) &&
            VerifyOffset(verifier, VT_TARGET) &&
            verifier.VerifyString(target()) &&
+           VerifyOffset(verifier, VT_TYPE) &&
+           verifier.VerifyString(type()) &&
+           VerifyField<int32_t>(verifier, VT_COMBO) &&
            verifier.EndTable();
   }
 };
@@ -1828,6 +1873,12 @@ struct S2C_PLAYER_DIEBuilder {
   }
   void add_target(flatbuffers::Offset<flatbuffers::String> target) {
     fbb_.AddOffset(S2C_PLAYER_DIE::VT_TARGET, target);
+  }
+  void add_type(flatbuffers::Offset<flatbuffers::String> type) {
+    fbb_.AddOffset(S2C_PLAYER_DIE::VT_TYPE, type);
+  }
+  void add_combo(int32_t combo) {
+    fbb_.AddElement<int32_t>(S2C_PLAYER_DIE::VT_COMBO, combo, 0);
   }
   explicit S2C_PLAYER_DIEBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1843,8 +1894,12 @@ struct S2C_PLAYER_DIEBuilder {
 inline flatbuffers::Offset<S2C_PLAYER_DIE> CreateS2C_PLAYER_DIE(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> nickname = 0,
-    flatbuffers::Offset<flatbuffers::String> target = 0) {
+    flatbuffers::Offset<flatbuffers::String> target = 0,
+    flatbuffers::Offset<flatbuffers::String> type = 0,
+    int32_t combo = 0) {
   S2C_PLAYER_DIEBuilder builder_(_fbb);
+  builder_.add_combo(combo);
+  builder_.add_type(type);
   builder_.add_target(target);
   builder_.add_nickname(nickname);
   return builder_.Finish();
@@ -1853,13 +1908,18 @@ inline flatbuffers::Offset<S2C_PLAYER_DIE> CreateS2C_PLAYER_DIE(
 inline flatbuffers::Offset<S2C_PLAYER_DIE> CreateS2C_PLAYER_DIEDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *nickname = nullptr,
-    const char *target = nullptr) {
+    const char *target = nullptr,
+    const char *type = nullptr,
+    int32_t combo = 0) {
   auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
   auto target__ = target ? _fbb.CreateString(target) : 0;
+  auto type__ = type ? _fbb.CreateString(type) : 0;
   return CreateS2C_PLAYER_DIE(
       _fbb,
       nickname__,
-      target__);
+      target__,
+      type__,
+      combo);
 }
 
 struct S2C_USER_VICTORY FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -1911,6 +1971,172 @@ inline flatbuffers::Offset<S2C_USER_VICTORY> CreateS2C_USER_VICTORYDirect(
   return CreateS2C_USER_VICTORY(
       _fbb,
       nickname__);
+}
+
+struct C2S_MELEE_ATTACK FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef C2S_MELEE_ATTACKBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_TARGET = 6,
+    VT_COMBO = 8
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  const flatbuffers::String *target() const {
+    return GetPointer<const flatbuffers::String *>(VT_TARGET);
+  }
+  int32_t combo() const {
+    return GetField<int32_t>(VT_COMBO, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<int32_t>(verifier, VT_COMBO) &&
+           verifier.EndTable();
+  }
+};
+
+struct C2S_MELEE_ATTACKBuilder {
+  typedef C2S_MELEE_ATTACK Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(C2S_MELEE_ATTACK::VT_NICKNAME, nickname);
+  }
+  void add_target(flatbuffers::Offset<flatbuffers::String> target) {
+    fbb_.AddOffset(C2S_MELEE_ATTACK::VT_TARGET, target);
+  }
+  void add_combo(int32_t combo) {
+    fbb_.AddElement<int32_t>(C2S_MELEE_ATTACK::VT_COMBO, combo, 0);
+  }
+  explicit C2S_MELEE_ATTACKBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<C2S_MELEE_ATTACK> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<C2S_MELEE_ATTACK>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<C2S_MELEE_ATTACK> CreateC2S_MELEE_ATTACK(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    flatbuffers::Offset<flatbuffers::String> target = 0,
+    int32_t combo = 0) {
+  C2S_MELEE_ATTACKBuilder builder_(_fbb);
+  builder_.add_combo(combo);
+  builder_.add_target(target);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<C2S_MELEE_ATTACK> CreateC2S_MELEE_ATTACKDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    const char *target = nullptr,
+    int32_t combo = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return CreateC2S_MELEE_ATTACK(
+      _fbb,
+      nickname__,
+      target__,
+      combo);
+}
+
+struct S2C_MELEE_ATTACK FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_MELEE_ATTACKBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_TARGET = 6,
+    VT_DAMAGE = 8,
+    VT_COMBO = 10
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  const flatbuffers::String *target() const {
+    return GetPointer<const flatbuffers::String *>(VT_TARGET);
+  }
+  float damage() const {
+    return GetField<float>(VT_DAMAGE, 0.0f);
+  }
+  int32_t combo() const {
+    return GetField<int32_t>(VT_COMBO, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<float>(verifier, VT_DAMAGE) &&
+           VerifyField<int32_t>(verifier, VT_COMBO) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_MELEE_ATTACKBuilder {
+  typedef S2C_MELEE_ATTACK Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(S2C_MELEE_ATTACK::VT_NICKNAME, nickname);
+  }
+  void add_target(flatbuffers::Offset<flatbuffers::String> target) {
+    fbb_.AddOffset(S2C_MELEE_ATTACK::VT_TARGET, target);
+  }
+  void add_damage(float damage) {
+    fbb_.AddElement<float>(S2C_MELEE_ATTACK::VT_DAMAGE, damage, 0.0f);
+  }
+  void add_combo(int32_t combo) {
+    fbb_.AddElement<int32_t>(S2C_MELEE_ATTACK::VT_COMBO, combo, 0);
+  }
+  explicit S2C_MELEE_ATTACKBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_MELEE_ATTACK> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_MELEE_ATTACK>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_MELEE_ATTACK> CreateS2C_MELEE_ATTACK(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    flatbuffers::Offset<flatbuffers::String> target = 0,
+    float damage = 0.0f,
+    int32_t combo = 0) {
+  S2C_MELEE_ATTACKBuilder builder_(_fbb);
+  builder_.add_combo(combo);
+  builder_.add_damage(damage);
+  builder_.add_target(target);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<S2C_MELEE_ATTACK> CreateS2C_MELEE_ATTACKDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    const char *target = nullptr,
+    float damage = 0.0f,
+    int32_t combo = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return CreateS2C_MELEE_ATTACK(
+      _fbb,
+      nickname__,
+      target__,
+      damage,
+      combo);
 }
 
 inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type) {
@@ -1996,6 +2222,14 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_USER_VICTORY: {
       auto ptr = reinterpret_cast<const S2C_USER_VICTORY *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_C2S_MELEE_ATTACK: {
+      auto ptr = reinterpret_cast<const C2S_MELEE_ATTACK *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_MELEE_ATTACK: {
+      auto ptr = reinterpret_cast<const S2C_MELEE_ATTACK *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

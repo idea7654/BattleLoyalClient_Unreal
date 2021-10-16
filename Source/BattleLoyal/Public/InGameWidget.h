@@ -48,6 +48,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock *RingTime;
 
+	UPROPERTY(meta = (BindWidget))
+	class UVerticalBox *VerticalBox_0;
+
 	UFUNCTION()
 	void ShowInteractText();
 
