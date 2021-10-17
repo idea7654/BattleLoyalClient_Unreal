@@ -276,6 +276,7 @@ void ABPlayerController::GetPacket()
 				if (chara->GetName() == FString(Socket->Nickname.c_str()))
 				{
 					chara->SetGameInfoUI("person", PlayerCount);
+					chara->AddSlot(FString(userNick.c_str()), FString(targetNick.c_str()));
 				}
 
 				if (chara->GetName() == FString(targetNick.c_str()))
@@ -336,13 +337,6 @@ void ABPlayerController::GetPacket()
 					{
 						chara->HealthAmount -= damage;
 						chara->SetHPUI();
-					}
-				}
-				else
-				{
-					if (chara->GetName() == FString(Socket->Nickname.c_str()))
-					{
-						chara->AddSlot(FString(userNick.c_str()), FString(target.c_str()));
 					}
 				}
 			}
