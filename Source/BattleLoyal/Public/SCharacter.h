@@ -34,6 +34,7 @@ protected:
 	void EndCrouch();
 
 	void Interact();
+	void Equip();
 
 	UPROPERTY(VIsibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent *CameraComp;
@@ -44,6 +45,7 @@ protected:
 	class USHealthComponent* HealthComp;
 
 	bool bWantsToZoom;
+	float PressedTime;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	float ZoomedFOV;
@@ -102,6 +104,9 @@ protected:
 	//UFUNCTION()
 	void Move(float Delta);
 
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	UAnimMontage *EquipMontage;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -113,6 +118,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 	bool hasGun;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	bool EquipGun;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocketName;

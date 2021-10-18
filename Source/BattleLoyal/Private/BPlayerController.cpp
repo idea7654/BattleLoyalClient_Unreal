@@ -370,6 +370,7 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 	for (int32 i = 0; i < (int32)gunLength; i++)
 	{
 		TSharedPtr<Gun> gun(new Gun());
+		gun->id = i;
 		gun->X = RecvData->gundata()->Get(i)->pos()->x();
 		gun->Y = RecvData->gundata()->Get(i)->pos()->y();
 		gun->Z = RecvData->gundata()->Get(i)->pos()->z();

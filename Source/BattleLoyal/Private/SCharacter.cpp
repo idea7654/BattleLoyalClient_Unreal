@@ -17,6 +17,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "Components/VerticalBox.h"
+#include "Animation/AnimMontage.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -44,15 +45,13 @@ ASCharacter::ASCharacter()
 	WeaponAttachSocketName = "WeaponSocket";
 
 	isInteract = false;
+	EquipGun = false;
 }
 
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//FVector Destination = FVector(-816.959778f, -27386.173828f, 288.368652f);
-	//TeleportTo(Destination, FRotator::ZeroRotator);
 
 	DefaultFOV = CameraComp->FieldOfView;
 	//Spawn a default weapon
@@ -70,7 +69,7 @@ void ASCharacter::BeginPlay()
 
 void ASCharacter::BeginCrouch()
 {
-	if (!this->GetMovementComponent()->IsFalling() && hasGun)
+	if (!this->GetMovementComponent()->IsFalling() && EquipGun)
 	{
 		Crouch();
 		CurrentCrouch = true;
@@ -87,16 +86,78 @@ void ASCharacter::Interact()
 {
 	if (isInteract)
 	{
-		DetectedWeapon->SetActorEnableCollision(false);
-		CurrentWeapon = DetectedWeapon;
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-		hasGun = true;
-		FString gunNum = DetectedWeapon->GetName();
-		int32 intGun = FCString::Atoi(*gunNum);
-		int32 size = 0;
-		auto packet = Socket->WRITE_PU_C2S_PICKUP_GUN(size, intGun);
-		Socket->WriteTo(packet, size);
+		if (!hasGun)
+		{
+			DetectedWeapon->SetActorEnableCollision(false);
+			CurrentWeapon = DetectedWeapon;
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+			hasGun = true;
+			EquipGun = true;
+			FString gunNum = DetectedWeapon->GetName();
+			int32 intGun = FCString::Atoi(*gunNum);
+			int32 size = 0;
+			auto packet = Socket->WRITE_PU_C2S_PICKUP_GUN(size, intGun);
+			Socket->WriteTo(packet, size);
+		}
+		else {
+			PressedTime = 1.0f;
+			FTimerHandle WaitHandle;
+			float WaitTime = 1.0f;
+			GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+			{
+				if (PressedTime == 1.0f)
+				{
+					CurrentWeapon->SetActorEnableCollision(true);
+					CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+					CurrentWeapon->SetActorLocation(DetectedWeapon->GetActorLocation());
+					DetectedWeapon->SetActorEnableCollision(false);
+					CurrentWeapon = DetectedWeapon;
+					CurrentWeapon->SetOwner(this);
+					CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+				}
+			}), WaitTime, false);
+		}
+	}
+	else
+	{
+		PressedTime = -10000.0f;
+	}
+}
+
+void ASCharacter::Equip()
+{
+	if (hasGun)
+	{
+		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+		if (EquipGun)
+		{
+			if (AnimInstance != NULL)
+			{
+				AnimInstance->Montage_Play(EquipMontage, 2.0f);
+				EquipGun = !EquipGun;
+				FTimerHandle WaitHandle;
+				float WaitTime = 0.6f; 
+				GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+				{
+					CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "EquipSocket");
+				}), WaitTime, false);
+			}
+		}
+		else
+		{
+			if (AnimInstance != NULL)
+			{
+				AnimInstance->Montage_Play(EquipMontage, -2.0f, EMontagePlayReturnType::MontageLength, EquipMontage->GetPlayLength());
+				EquipGun = !EquipGun;
+				FTimerHandle WaitHandle;
+				float WaitTime = 0.6f;
+				GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+				{
+					CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+				}), WaitTime, false);
+			}
+		}
 	}
 }
 
@@ -112,7 +173,7 @@ void ASCharacter::EndZoom()
 
 void ASCharacter::StartFire()
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && EquipGun)
 	{
 		CurrentWeapon->StartFire();
 	}
@@ -120,7 +181,7 @@ void ASCharacter::StartFire()
 
 void ASCharacter::StopFire()
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && EquipGun)
 	{
 		CurrentWeapon->StopFire();
 	}
@@ -225,7 +286,11 @@ void ASCharacter::SearchObjects()
 		}
 		else {
 			isInteract = false;
+			PressedTime = 0.0f;
 		}
+	}
+	else {
+		PressedTime = 0.0f;
 	}
 }
 
@@ -354,8 +419,6 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::MoveRight);
 
-	//PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
-	//PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::RotatePitch);
 	PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::RotateYaw);
 
@@ -371,6 +434,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::Interact);
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ASCharacter::PlayAttack);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ASCharacter::Equip);
 }
 
 void ASCharacter::MoveForward(float Value)
