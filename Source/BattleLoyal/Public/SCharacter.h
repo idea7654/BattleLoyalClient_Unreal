@@ -34,7 +34,6 @@ protected:
 	void EndCrouch();
 
 	void Interact();
-	void Equip();
 
 	UPROPERTY(VIsibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent *CameraComp;
@@ -107,6 +106,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	UAnimMontage *EquipMontage;
 
+	ASCharacter *TargetCharacter;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -168,13 +169,17 @@ public:
 	int32 MaxCombo;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void PlayAttack();
+	void PlayAttack(bool ByControl);
+
+	DECLARE_DELEGATE_OneParam(FPlayAttackDelegate, bool);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void AddSlot(const FString &Killer, const FString &Target);
 
 	UFUNCTION(BlueprintCallable)
 	void SetChild(UUserWidget *MyWidget);
+
+	void Equip();
 
 private:
 	ClientSocket	*Socket;

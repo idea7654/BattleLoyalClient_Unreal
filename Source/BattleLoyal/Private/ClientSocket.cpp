@@ -119,9 +119,11 @@ bool ClientSocket::RecvFrom()
 	//UE_LOG(LogTemp, Warning, TEXT("%d"), recvLen);
 	char* remoteAddress = inet_ntoa(mServerInfo.sin_addr);
 	int32 remotePort = htons(mServerInfo.sin_port);
-
+	int32 NextPacket = 0;
+	int32 remainLength = recvLen;
+RETRY:
 	int32 PacketLength = 0;
-	::memcpy(&PacketLength, mReadBuffer, sizeof(int32));
+	::memcpy(&PacketLength, mReadBuffer + NextPacket, sizeof(int32));
 
 	int32 PacketNumber = 0;
 	::memcpy(&PacketNumber, mReadBuffer + sizeof(int32), sizeof(int32));
@@ -134,6 +136,12 @@ bool ClientSocket::RecvFrom()
 	MessageQueue.push(message);
 	QueueMutex.unlock();
 
+	if (remainLength > PacketLength)
+	{
+		remainLength = remainLength - PacketLength;
+		NextPacket += PacketLength;
+		goto RETRY;
+	}
 	return true;
 }
 
@@ -345,6 +353,40 @@ uint8_t * ClientSocket::WRITE_PU_C2S_MELEE_ATTACK(int32 & refLength, std::string
 	auto targetActor = builder.CreateString(target);
 	auto makePacket = CreateC2S_MELEE_ATTACK(builder, userNick, targetActor, combo);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_MELEE_ATTACK, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t * ClientSocket::WRITE_PU_C2S_EQUIP_GUN(int32 & refLength, bool state)
+{
+	if (Nickname == "") return NULL;
+
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_EQUIP_GUN(builder, userNick, state);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_EQUIP_GUN, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t * ClientSocket::WRITE_PU_C2S_CHANGE_GUN(int32 & refLength, int32 originID, int32 nowID)
+{
+	if (Nickname == "") return NULL;
+
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_CHANGE_GUN(builder, userNick, originID, nowID);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_CHANGE_GUN, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

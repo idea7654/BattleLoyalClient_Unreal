@@ -227,6 +227,7 @@ void ABPlayerController::GetPacket()
 				TargetGun->SetOwner(SpawnedCharacter);
 				TargetGun->AttachToComponent(SpawnedCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SpawnedCharacter->WeaponAttachSocketName);
 				SpawnedCharacter->hasGun = true;
+				SpawnedCharacter->EquipGun = true;
 				SpawnedCharacter->CurrentWeapon = TargetGun;
 			}
 			break;
@@ -285,7 +286,6 @@ void ABPlayerController::GetPacket()
 					chara->SetHPUI();
 					chara->SetDie();
 					removeCharacter = chara;
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("%s Kill %s"), *FString(userNick.c_str()), *FString(targetNick.c_str())));
 					chara->SetGameOver();
 				}
 			}
@@ -326,17 +326,67 @@ void ABPlayerController::GetPacket()
 				{
 					if (chara->GetName() == FString(userNick.c_str()))
 					{
-						if (combo - 1 >= 0)
-							chara->CurrentCombo = combo - 1;
+						if (combo == 0)
+							chara->CurrentCombo = 2;
 						else
-							chara->CurrentCombo = combo;
-						chara->PlayAttack();
+							chara->CurrentCombo = combo - 1;
+
+						//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Combo: %d"), chara->CurrentCombo));
+						chara->PlayAttack(false);
 					}
 
 					if (chara->GetName() == FString(target.c_str()))
 					{
 						chara->HealthAmount -= damage;
 						chara->SetHPUI();
+					}
+				}
+			}
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_EQUIP_GUN:
+		{
+			auto RecvData = static_cast<const S2C_EQUIP_GUN*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			bool state = RecvData->state();
+
+			if (userNick != Socket->Nickname)
+			{
+				for (auto &chara : Characters)
+				{
+					if (chara->GetName() == FString(userNick.c_str()))
+					{
+						chara->EquipGun = !state;
+						chara->Equip();
+						break;
+					}
+				}
+			}
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_C2S_CHANGE_GUN:
+		{
+			auto RecvData = static_cast<const S2C_CHANGE_GUN*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			int32 originGun = RecvData->originid();
+			int32 nowGun = RecvData->nowid();
+
+			if (userNick != Socket->Nickname)
+			{
+				for (auto &chara : Characters)
+				{
+					if (chara->GetName() == FString(userNick.c_str()))
+					{
+						chara->CurrentWeapon->SetActorEnableCollision(true);
+						chara->CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+						chara->CurrentWeapon->SetActorLocation(Guns[originGun]->GetActorLocation());
+						Guns[nowGun]->SetActorEnableCollision(false);
+						chara->CurrentWeapon = Guns[nowGun];
+						chara->CurrentWeapon->SetOwner(chara);
+						chara->CurrentWeapon->AttachToComponent(chara->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, chara->WeaponAttachSocketName);
+						chara->hasGun = true;
+						chara->EquipGun = true;
+						break;
 					}
 				}
 			}

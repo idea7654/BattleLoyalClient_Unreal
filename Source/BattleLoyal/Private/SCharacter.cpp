@@ -108,6 +108,8 @@ void ASCharacter::Interact()
 			{
 				if (PressedTime == 1.0f)
 				{
+					int32 originID = FCString::Atoi(*CurrentWeapon->GetName());
+					int32 nowID = FCString::Atoi(*DetectedWeapon->GetName());
 					CurrentWeapon->SetActorEnableCollision(true);
 					CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 					CurrentWeapon->SetActorLocation(DetectedWeapon->GetActorLocation());
@@ -115,6 +117,9 @@ void ASCharacter::Interact()
 					CurrentWeapon = DetectedWeapon;
 					CurrentWeapon->SetOwner(this);
 					CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+					int32 size = 0;
+					auto packet = Socket->WRITE_PU_C2S_CHANGE_GUN(size, originID, nowID);
+					Socket->WriteTo(packet, size);
 				}
 			}), WaitTime, false);
 		}
@@ -136,6 +141,9 @@ void ASCharacter::Equip()
 			{
 				AnimInstance->Montage_Play(EquipMontage, 2.0f);
 				EquipGun = !EquipGun;
+				int32 size = 0;
+				auto packet = Socket->WRITE_PU_C2S_EQUIP_GUN(size, EquipGun);
+				Socket->WriteTo(packet, size);
 				FTimerHandle WaitHandle;
 				float WaitTime = 0.6f; 
 				GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
@@ -150,6 +158,9 @@ void ASCharacter::Equip()
 			{
 				AnimInstance->Montage_Play(EquipMontage, -2.0f, EMontagePlayReturnType::MontageLength, EquipMontage->GetPlayLength());
 				EquipGun = !EquipGun;
+				int32 size = 0;
+				auto packet = Socket->WRITE_PU_C2S_EQUIP_GUN(size, EquipGun);
+				Socket->WriteTo(packet, size);
 				FTimerHandle WaitHandle;
 				float WaitTime = 0.6f;
 				GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
@@ -244,7 +255,7 @@ float ASCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEve
 		//Die!
 		bDied = true;
 		GetMovementComponent()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
 
@@ -288,6 +299,20 @@ void ASCharacter::SearchObjects()
 			isInteract = false;
 			PressedTime = 0.0f;
 		}
+
+		TargetCharacter = Cast<ASCharacter>(HitActor);
+		if (TargetCharacter)
+		{
+			GameUI->ShowInteractText();
+			isInteract = true;
+			if (TargetCharacter->bDied)
+			{
+				
+			}
+			else {
+				isInteract = false;
+			}
+		}//여기 고쳐서 시체파밍 가능하도록!
 	}
 	else {
 		PressedTime = 0.0f;
@@ -322,7 +347,7 @@ void ASCharacter::SetDie()
 		//Die!
 		bDied = true;
 		GetMovementComponent()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
 
@@ -337,7 +362,7 @@ void ASCharacter::SetGameOver()
 
 void ASCharacter::SetVictory()
 {
-	GameUI->ShowVictory();
+	//GameUI->ShowVictory();
 }
 
 void ASCharacter::SetGameInfoUI(FString action, int32 count)
@@ -359,6 +384,8 @@ void ASCharacter::Attack()
 		FCollisionObjectQueryParams ObjQueryParam;
 		ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
 
+		UE_LOG(LogTemp, Warning, TEXT("%d"), CurrentCombo);
+
 		if (GetWorld()->LineTraceSingleByObjectType(HitResult, StartTrace, EndTrace, ObjQueryParam))
 		{
 			if (HitResult.GetActor())
@@ -367,6 +394,12 @@ void ASCharacter::Attack()
 				//맞았을 때 패킷!
 				int32 size = 0;
 				uint8_t* packet = Socket->WRITE_PU_C2S_MELEE_ATTACK(size, TCHAR_TO_ANSI(*HitResult.GetActor()->GetName()), CurrentCombo);
+				Socket->WriteTo(packet, size);
+			}
+			else 
+			{
+				int32 size = 0;
+				uint8_t* packet = Socket->WRITE_PU_C2S_MELEE_ATTACK(size, "", CurrentCombo);
 				Socket->WriteTo(packet, size);
 			}
 		}
@@ -433,7 +466,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::Interact);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ASCharacter::PlayAttack);
+	PlayerInputComponent->BindAction<FPlayAttackDelegate>("Attack", IE_Pressed, this, &ASCharacter::PlayAttack, true);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ASCharacter::Equip);
 }
 

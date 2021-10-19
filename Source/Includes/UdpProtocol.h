@@ -83,6 +83,18 @@ struct C2S_MELEE_ATTACKBuilder;
 struct S2C_MELEE_ATTACK;
 struct S2C_MELEE_ATTACKBuilder;
 
+struct C2S_EQUIP_GUN;
+struct C2S_EQUIP_GUNBuilder;
+
+struct S2C_EQUIP_GUN;
+struct S2C_EQUIP_GUNBuilder;
+
+struct C2S_CHANGE_GUN;
+struct C2S_CHANGE_GUNBuilder;
+
+struct S2C_CHANGE_GUN;
+struct S2C_CHANGE_GUNBuilder;
+
 enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
@@ -107,11 +119,15 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_S2C_USER_VICTORY = 20,
   MESSAGE_ID_C2S_MELEE_ATTACK = 21,
   MESSAGE_ID_S2C_MELEE_ATTACK = 22,
+  MESSAGE_ID_C2S_EQUIP_GUN = 23,
+  MESSAGE_ID_S2C_EQUIP_GUN = 24,
+  MESSAGE_ID_C2S_CHANGE_GUN = 25,
+  MESSAGE_ID_S2C_CHANGE_GUN = 26,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
-  MESSAGE_ID_MAX = MESSAGE_ID_S2C_MELEE_ATTACK
+  MESSAGE_ID_MAX = MESSAGE_ID_S2C_CHANGE_GUN
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[23] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[27] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
@@ -135,13 +151,17 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[23] {
     MESSAGE_ID_S2C_PLAYER_DIE,
     MESSAGE_ID_S2C_USER_VICTORY,
     MESSAGE_ID_C2S_MELEE_ATTACK,
-    MESSAGE_ID_S2C_MELEE_ATTACK
+    MESSAGE_ID_S2C_MELEE_ATTACK,
+    MESSAGE_ID_C2S_EQUIP_GUN,
+    MESSAGE_ID_S2C_EQUIP_GUN,
+    MESSAGE_ID_C2S_CHANGE_GUN,
+    MESSAGE_ID_S2C_CHANGE_GUN
   };
   return values;
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[24] = {
+  static const char * const names[28] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
@@ -165,13 +185,17 @@ inline const char * const *EnumNamesMESSAGE_ID() {
     "S2C_USER_VICTORY",
     "C2S_MELEE_ATTACK",
     "S2C_MELEE_ATTACK",
+    "C2S_EQUIP_GUN",
+    "S2C_EQUIP_GUN",
+    "C2S_CHANGE_GUN",
+    "S2C_CHANGE_GUN",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameMESSAGE_ID(MESSAGE_ID e) {
-  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_MELEE_ATTACK)) return "";
+  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_CHANGE_GUN)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMESSAGE_ID()[index];
 }
@@ -266,6 +290,22 @@ template<> struct MESSAGE_IDTraits<C2S_MELEE_ATTACK> {
 
 template<> struct MESSAGE_IDTraits<S2C_MELEE_ATTACK> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_MELEE_ATTACK;
+};
+
+template<> struct MESSAGE_IDTraits<C2S_EQUIP_GUN> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_C2S_EQUIP_GUN;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_EQUIP_GUN> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_EQUIP_GUN;
+};
+
+template<> struct MESSAGE_IDTraits<C2S_CHANGE_GUN> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_C2S_CHANGE_GUN;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_CHANGE_GUN> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_CHANGE_GUN;
 };
 
 bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type);
@@ -379,6 +419,18 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_MELEE_ATTACK *packet_as_S2C_MELEE_ATTACK() const {
     return packet_type() == MESSAGE_ID_S2C_MELEE_ATTACK ? static_cast<const S2C_MELEE_ATTACK *>(packet()) : nullptr;
   }
+  const C2S_EQUIP_GUN *packet_as_C2S_EQUIP_GUN() const {
+    return packet_type() == MESSAGE_ID_C2S_EQUIP_GUN ? static_cast<const C2S_EQUIP_GUN *>(packet()) : nullptr;
+  }
+  const S2C_EQUIP_GUN *packet_as_S2C_EQUIP_GUN() const {
+    return packet_type() == MESSAGE_ID_S2C_EQUIP_GUN ? static_cast<const S2C_EQUIP_GUN *>(packet()) : nullptr;
+  }
+  const C2S_CHANGE_GUN *packet_as_C2S_CHANGE_GUN() const {
+    return packet_type() == MESSAGE_ID_C2S_CHANGE_GUN ? static_cast<const C2S_CHANGE_GUN *>(packet()) : nullptr;
+  }
+  const S2C_CHANGE_GUN *packet_as_S2C_CHANGE_GUN() const {
+    return packet_type() == MESSAGE_ID_S2C_CHANGE_GUN ? static_cast<const S2C_CHANGE_GUN *>(packet()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PACKET_TYPE) &&
@@ -474,6 +526,22 @@ template<> inline const C2S_MELEE_ATTACK *Message::packet_as<C2S_MELEE_ATTACK>()
 
 template<> inline const S2C_MELEE_ATTACK *Message::packet_as<S2C_MELEE_ATTACK>() const {
   return packet_as_S2C_MELEE_ATTACK();
+}
+
+template<> inline const C2S_EQUIP_GUN *Message::packet_as<C2S_EQUIP_GUN>() const {
+  return packet_as_C2S_EQUIP_GUN();
+}
+
+template<> inline const S2C_EQUIP_GUN *Message::packet_as<S2C_EQUIP_GUN>() const {
+  return packet_as_S2C_EQUIP_GUN();
+}
+
+template<> inline const C2S_CHANGE_GUN *Message::packet_as<C2S_CHANGE_GUN>() const {
+  return packet_as_C2S_CHANGE_GUN();
+}
+
+template<> inline const S2C_CHANGE_GUN *Message::packet_as<S2C_CHANGE_GUN>() const {
+  return packet_as_S2C_CHANGE_GUN();
 }
 
 struct MessageBuilder {
@@ -2139,6 +2207,282 @@ inline flatbuffers::Offset<S2C_MELEE_ATTACK> CreateS2C_MELEE_ATTACKDirect(
       combo);
 }
 
+struct C2S_EQUIP_GUN FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef C2S_EQUIP_GUNBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_STATE = 6
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  bool state() const {
+    return GetField<uint8_t>(VT_STATE, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<uint8_t>(verifier, VT_STATE) &&
+           verifier.EndTable();
+  }
+};
+
+struct C2S_EQUIP_GUNBuilder {
+  typedef C2S_EQUIP_GUN Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(C2S_EQUIP_GUN::VT_NICKNAME, nickname);
+  }
+  void add_state(bool state) {
+    fbb_.AddElement<uint8_t>(C2S_EQUIP_GUN::VT_STATE, static_cast<uint8_t>(state), 0);
+  }
+  explicit C2S_EQUIP_GUNBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<C2S_EQUIP_GUN> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<C2S_EQUIP_GUN>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<C2S_EQUIP_GUN> CreateC2S_EQUIP_GUN(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    bool state = false) {
+  C2S_EQUIP_GUNBuilder builder_(_fbb);
+  builder_.add_nickname(nickname);
+  builder_.add_state(state);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<C2S_EQUIP_GUN> CreateC2S_EQUIP_GUNDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    bool state = false) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateC2S_EQUIP_GUN(
+      _fbb,
+      nickname__,
+      state);
+}
+
+struct S2C_EQUIP_GUN FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_EQUIP_GUNBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_STATE = 6
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  bool state() const {
+    return GetField<uint8_t>(VT_STATE, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<uint8_t>(verifier, VT_STATE) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_EQUIP_GUNBuilder {
+  typedef S2C_EQUIP_GUN Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(S2C_EQUIP_GUN::VT_NICKNAME, nickname);
+  }
+  void add_state(bool state) {
+    fbb_.AddElement<uint8_t>(S2C_EQUIP_GUN::VT_STATE, static_cast<uint8_t>(state), 0);
+  }
+  explicit S2C_EQUIP_GUNBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_EQUIP_GUN> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_EQUIP_GUN>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_EQUIP_GUN> CreateS2C_EQUIP_GUN(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    bool state = false) {
+  S2C_EQUIP_GUNBuilder builder_(_fbb);
+  builder_.add_nickname(nickname);
+  builder_.add_state(state);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<S2C_EQUIP_GUN> CreateS2C_EQUIP_GUNDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    bool state = false) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateS2C_EQUIP_GUN(
+      _fbb,
+      nickname__,
+      state);
+}
+
+struct C2S_CHANGE_GUN FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef C2S_CHANGE_GUNBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_ORIGINID = 6,
+    VT_NOWID = 8
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  int32_t originid() const {
+    return GetField<int32_t>(VT_ORIGINID, 0);
+  }
+  int32_t nowid() const {
+    return GetField<int32_t>(VT_NOWID, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<int32_t>(verifier, VT_ORIGINID) &&
+           VerifyField<int32_t>(verifier, VT_NOWID) &&
+           verifier.EndTable();
+  }
+};
+
+struct C2S_CHANGE_GUNBuilder {
+  typedef C2S_CHANGE_GUN Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(C2S_CHANGE_GUN::VT_NICKNAME, nickname);
+  }
+  void add_originid(int32_t originid) {
+    fbb_.AddElement<int32_t>(C2S_CHANGE_GUN::VT_ORIGINID, originid, 0);
+  }
+  void add_nowid(int32_t nowid) {
+    fbb_.AddElement<int32_t>(C2S_CHANGE_GUN::VT_NOWID, nowid, 0);
+  }
+  explicit C2S_CHANGE_GUNBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<C2S_CHANGE_GUN> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<C2S_CHANGE_GUN>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<C2S_CHANGE_GUN> CreateC2S_CHANGE_GUN(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    int32_t originid = 0,
+    int32_t nowid = 0) {
+  C2S_CHANGE_GUNBuilder builder_(_fbb);
+  builder_.add_nowid(nowid);
+  builder_.add_originid(originid);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<C2S_CHANGE_GUN> CreateC2S_CHANGE_GUNDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    int32_t originid = 0,
+    int32_t nowid = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateC2S_CHANGE_GUN(
+      _fbb,
+      nickname__,
+      originid,
+      nowid);
+}
+
+struct S2C_CHANGE_GUN FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_CHANGE_GUNBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_ORIGINID = 6,
+    VT_NOWID = 8
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  int32_t originid() const {
+    return GetField<int32_t>(VT_ORIGINID, 0);
+  }
+  int32_t nowid() const {
+    return GetField<int32_t>(VT_NOWID, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<int32_t>(verifier, VT_ORIGINID) &&
+           VerifyField<int32_t>(verifier, VT_NOWID) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_CHANGE_GUNBuilder {
+  typedef S2C_CHANGE_GUN Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(S2C_CHANGE_GUN::VT_NICKNAME, nickname);
+  }
+  void add_originid(int32_t originid) {
+    fbb_.AddElement<int32_t>(S2C_CHANGE_GUN::VT_ORIGINID, originid, 0);
+  }
+  void add_nowid(int32_t nowid) {
+    fbb_.AddElement<int32_t>(S2C_CHANGE_GUN::VT_NOWID, nowid, 0);
+  }
+  explicit S2C_CHANGE_GUNBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_CHANGE_GUN> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_CHANGE_GUN>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_CHANGE_GUN> CreateS2C_CHANGE_GUN(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    int32_t originid = 0,
+    int32_t nowid = 0) {
+  S2C_CHANGE_GUNBuilder builder_(_fbb);
+  builder_.add_nowid(nowid);
+  builder_.add_originid(originid);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<S2C_CHANGE_GUN> CreateS2C_CHANGE_GUNDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    int32_t originid = 0,
+    int32_t nowid = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateS2C_CHANGE_GUN(
+      _fbb,
+      nickname__,
+      originid,
+      nowid);
+}
+
 inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type) {
   switch (type) {
     case MESSAGE_ID_NONE: {
@@ -2230,6 +2574,22 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_MELEE_ATTACK: {
       auto ptr = reinterpret_cast<const S2C_MELEE_ATTACK *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_C2S_EQUIP_GUN: {
+      auto ptr = reinterpret_cast<const C2S_EQUIP_GUN *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_EQUIP_GUN: {
+      auto ptr = reinterpret_cast<const S2C_EQUIP_GUN *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_C2S_CHANGE_GUN: {
+      auto ptr = reinterpret_cast<const C2S_CHANGE_GUN *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_CHANGE_GUN: {
+      auto ptr = reinterpret_cast<const S2C_CHANGE_GUN *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
