@@ -60,6 +60,7 @@ Content/PhotoR_Backgrounds
 Content/RuralAustralia
 Content/CloseCombatAnimSet
 Content/MMDModel
+Content/SwordSwipesAnimTrail
 
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/

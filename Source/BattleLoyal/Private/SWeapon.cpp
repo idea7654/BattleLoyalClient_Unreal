@@ -10,6 +10,7 @@
 #include "Camera/CameraShake.h"
 #include "SCharacter.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines for Weapons"), ECVF_Cheat);
 
@@ -45,78 +46,99 @@ void ASWeapon::Fire()
 	AActor *MyOwner = GetOwner();
 	if (MyOwner)
 	{
-		FVector EyeLocation;
-		FRotator EyeRotation;
-		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-		FVector ShotDirection = EyeRotation.Vector();
-		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(MyOwner);
-		QueryParams.AddIgnoredActor(this);
-		QueryParams.bTraceComplex = true;
-		QueryParams.bReturnPhysicalMaterial = true;
-
-		//Particle "Target" parameter
-		FVector TracerEndPoint = TraceEnd;
-
-		FHitResult Hit;
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_GameTraceChannel1, QueryParams))
+		ASCharacter *MyChara = Cast<ASCharacter>(MyOwner);
+		if (MyChara)
 		{
-			//Blocking hit! process damage
-			AActor *HitActor = Hit.GetActor();
-
-			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-			float ActualDamage = BaseDamage;
-			if (SurfaceType == SurfaceType1)
+			if (MyChara->Bullet > 0)
 			{
-				ActualDamage *= 4.0f;
-			}
-			//UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+				FVector EyeLocation;
+				FRotator EyeRotation;
+				MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-			if (MyOwner->GetName() == FString(Socket->Nickname.c_str()))
-			{
-				ASCharacter *targetCharacter = Cast<ASCharacter>(HitActor);
-				int32 size = 0;
-				if (targetCharacter != nullptr)
+				FVector ShotDirection = EyeRotation.Vector();
+				FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(MyOwner);
+				QueryParams.AddIgnoredActor(this);
+				QueryParams.bTraceComplex = true;
+				QueryParams.bReturnPhysicalMaterial = true;
+
+				//Particle "Target" parameter
+				FVector TracerEndPoint = TraceEnd;
+
+				MyChara->Bullet--;
+				MyChara->SetBullet();
+
+				FHitResult Hit;
+				if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_GameTraceChannel1, QueryParams))
 				{
-					uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, TCHAR_TO_ANSI(*targetCharacter->GetName()), ActualDamage);
-					Socket->WriteTo(packet, size);
+					//Blocking hit! process damage
+					AActor *HitActor = Hit.GetActor();
+
+					EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+					float ActualDamage = BaseDamage;
+					if (SurfaceType == SurfaceType1)
+					{
+						ActualDamage *= 4.0f;
+					}
+					//UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+
+					ASCharacter *targetCharacter = Cast<ASCharacter>(HitActor);
+
+					if (MyOwner->GetName() == FString(Socket->Nickname.c_str()))
+					{
+						int32 size = 0;
+						if (targetCharacter != nullptr)
+						{
+							uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, TCHAR_TO_ANSI(*targetCharacter->GetName()), ActualDamage);
+							Socket->WriteTo(packet, size);
+							
+						}
+						else {
+							uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, "", 0.0f);
+							Socket->WriteTo(packet, size);
+						}
+					}
+
+					if (targetCharacter != nullptr)
+					{
+						UAnimInstance *Anim = targetCharacter->GetMesh()->GetAnimInstance();
+						if (Anim)
+						{
+							Anim->Montage_Play(targetCharacter->HitReactMontage, 1.0f);
+						}
+					}
+
+					UParticleSystem *SelectedEffect = nullptr;
+					switch (SurfaceType)
+					{
+					case SurfaceType1:
+					case SurfaceType2:
+						SelectedEffect = FleshImpactEffect;
+						break;
+					default:
+						SelectedEffect = DefaultImpactEffect;
+						break;
+					}
+
+					if (SelectedEffect)
+					{
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+					}
+					TracerEndPoint = Hit.ImpactPoint;
 				}
-				else {
-					uint8_t* packet = Socket->WRITE_PU_C2S_SHOOT(size, "", 0.0f);
-					Socket->WriteTo(packet, size);
+				if (DebugWeaponDrawing > 0)
+				{
+					DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 				}
-			}
-			
-			UParticleSystem *SelectedEffect = nullptr;
-			switch (SurfaceType)
-			{
-			case SurfaceType1:
-			case SurfaceType2:
-				SelectedEffect = FleshImpactEffect;
-				break;
-			default:
-				SelectedEffect = DefaultImpactEffect;
-				break;
-			}
 
-			if (SelectedEffect)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				PlayFireEffects(TracerEndPoint);
+
+				LastFireTime = GetWorld()->TimeSeconds;
 			}
-			TracerEndPoint = Hit.ImpactPoint;
 		}
-		if (DebugWeaponDrawing > 0)
-		{
-			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
-		}
-
-		PlayFireEffects(TracerEndPoint);
-
-		LastFireTime = GetWorld()->TimeSeconds;
 	}
 }
 

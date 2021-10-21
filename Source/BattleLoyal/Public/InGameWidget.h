@@ -51,6 +51,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UVerticalBox *VerticalBox_0;
 
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock *BulletText;
+
 	UFUNCTION()
 	void ShowInteractText();
 
@@ -65,6 +68,9 @@ public:
 
 	UFUNCTION()
 	void SetKillCount(int32 count);
+
+	UFUNCTION()
+	void SetBulletValue(int32 bullet);
 
 	void NativeConstruct() override;
 

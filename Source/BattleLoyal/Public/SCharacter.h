@@ -108,6 +108,15 @@ protected:
 
 	ASCharacter *TargetCharacter;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	UUserWidget *OptionWidget;
+
+	UPROPERTY(BlueprintReadWrite, Category = "UI")
+	bool isOption = false;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void Option();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -180,6 +189,15 @@ public:
 	void SetChild(UUserWidget *MyWidget);
 
 	void Equip();
+
+	UPROPERTY()
+	int32 Bullet;
+
+	UFUNCTION()
+	void SetBullet();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player")
+	UAnimMontage *HitReactMontage;
 
 private:
 	ClientSocket	*Socket;

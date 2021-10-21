@@ -46,6 +46,7 @@ ASCharacter::ASCharacter()
 
 	isInteract = false;
 	EquipGun = false;
+	Bullet = 200;
 }
 
 // Called when the game starts or when spawned
@@ -123,6 +124,17 @@ void ASCharacter::Interact()
 				}
 			}), WaitTime, false);
 		}
+
+		if (TargetCharacter)
+		{
+			if (TargetCharacter->bDied)
+			{
+				//총알 파밍!
+				Bullet += TargetCharacter->Bullet;
+				SetBullet();
+				TargetCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
+		}
 	}
 	else
 	{
@@ -142,8 +154,11 @@ void ASCharacter::Equip()
 				AnimInstance->Montage_Play(EquipMontage, 2.0f);
 				EquipGun = !EquipGun;
 				int32 size = 0;
-				auto packet = Socket->WRITE_PU_C2S_EQUIP_GUN(size, EquipGun);
-				Socket->WriteTo(packet, size);
+				if (this->GetName() == FString(Socket->Nickname.c_str()))
+				{
+					auto packet = Socket->WRITE_PU_C2S_EQUIP_GUN(size, EquipGun);
+					Socket->WriteTo(packet, size);
+				}
 				FTimerHandle WaitHandle;
 				float WaitTime = 0.6f; 
 				GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
@@ -170,6 +185,11 @@ void ASCharacter::Equip()
 			}
 		}
 	}
+}
+
+void ASCharacter::SetBullet()
+{
+	GameUI->SetBulletValue(Bullet);
 }
 
 void ASCharacter::BeginZoom()
@@ -303,11 +323,10 @@ void ASCharacter::SearchObjects()
 		TargetCharacter = Cast<ASCharacter>(HitActor);
 		if (TargetCharacter)
 		{
-			GameUI->ShowInteractText();
-			isInteract = true;
 			if (TargetCharacter->bDied)
 			{
-				
+				GameUI->ShowInteractText();
+				isInteract = true;
 			}
 			else {
 				isInteract = false;
@@ -378,23 +397,28 @@ void ASCharacter::Attack()
 	if (this->GetName() == FString(Socket->Nickname.c_str()))
 	{
 		FHitResult HitResult;
-		FVector StartTrace = GetCapsuleComponent()->GetComponentLocation() + GetCapsuleComponent()->GetForwardVector() * 100.0f;
-		FVector EndTrace = StartTrace + (GetCapsuleComponent()->GetForwardVector() * 160.0f);
+		FVector StartTrace = GetCapsuleComponent()->GetComponentLocation();
+		FVector EndTrace = StartTrace + (GetCapsuleComponent()->GetForwardVector() * 80.0f);
 
-		FCollisionObjectQueryParams ObjQueryParam;
-		ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
 
-		UE_LOG(LogTemp, Warning, TEXT("%d"), CurrentCombo);
-
-		if (GetWorld()->LineTraceSingleByObjectType(HitResult, StartTrace, EndTrace, ObjQueryParam))
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_Pawn, QueryParams))
 		{
 			if (HitResult.GetActor())
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("%s"), *HitResult.GetActor()->GetName());
-				//맞았을 때 패킷!
 				int32 size = 0;
 				uint8_t* packet = Socket->WRITE_PU_C2S_MELEE_ATTACK(size, TCHAR_TO_ANSI(*HitResult.GetActor()->GetName()), CurrentCombo);
 				Socket->WriteTo(packet, size);
+				ASCharacter *HitCharacter = Cast<ASCharacter>(HitResult.GetActor());
+				if (HitCharacter)
+				{
+					UAnimInstance *Anim = HitCharacter->GetMesh()->GetAnimInstance();
+					if (Anim)
+					{
+						Anim->Montage_Play(HitReactMontage, 1.5f);
+					}
+				}
 			}
 			else 
 			{
@@ -420,7 +444,6 @@ void ASCharacter::SetChild(UUserWidget * MyWidget)
 {
 	GameUI->VerticalBox_0->AddChild(MyWidget);
 }
-
 
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
@@ -468,6 +491,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::Interact);
 	PlayerInputComponent->BindAction<FPlayAttackDelegate>("Attack", IE_Pressed, this, &ASCharacter::PlayAttack, true);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ASCharacter::Equip);
+	PlayerInputComponent->BindAction("Option", IE_Pressed, this, &ASCharacter::Option);
 }
 
 void ASCharacter::MoveForward(float Value)

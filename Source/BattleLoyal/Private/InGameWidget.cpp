@@ -29,6 +29,11 @@ void UInGameWidget::SetKillCount(int32 count)
 	KillText->SetText(FText::AsNumber(count));
 }
 
+void UInGameWidget::SetBulletValue (int32 bullet)
+{
+	BulletText->SetText(FText::AsNumber(bullet));
+}
+
 void UInGameWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
