@@ -61,6 +61,7 @@ Content/RuralAustralia
 Content/CloseCombatAnimSet
 Content/MMDModel
 Content/SwordSwipesAnimTrail
+Content/SafeZone
 
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/

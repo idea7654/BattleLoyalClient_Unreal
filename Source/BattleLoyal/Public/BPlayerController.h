@@ -11,7 +11,8 @@
  * 
  */
 
-
+DECLARE_DELEGATE(FDele_Single);
+DECLARE_DELEGATE(FZone_Time);
 
 UCLASS()
 class BATTLELOYAL_API ABPlayerController : public APlayerController
@@ -82,7 +83,18 @@ public:
 
 	UPROPERTY()
 	int32 PlayerKill;
+
+	UPROPERTY()
+	TArray<FVector> RoundVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Round")
+	FVector NowRound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Round")
+	int32 RoundNum;
+
+	FDele_Single Func_DeleSingle;
+	FZone_Time Func_ZoneTime;
 private:
 	ClientSocket	*Socket;
-	
 };

@@ -136,6 +136,11 @@ RETRY:
 	MessageQueue.push(message);
 	QueueMutex.unlock();
 
+	if (message->packet_type() == MESSAGE_ID::MESSAGE_ID_S2C_PICKUP_GUN)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PacketCome!")));
+	}
+
 	if (remainLength > PacketLength)
 	{
 		remainLength = remainLength - PacketLength;

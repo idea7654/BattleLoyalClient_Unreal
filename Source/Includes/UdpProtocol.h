@@ -53,6 +53,9 @@ struct InitUserInfoBuilder;
 struct InitGunInfo;
 struct InitGunInfoBuilder;
 
+struct RoundInfo;
+struct RoundInfoBuilder;
+
 struct S2C_GAME_START;
 struct S2C_GAME_STARTBuilder;
 
@@ -95,6 +98,9 @@ struct C2S_CHANGE_GUNBuilder;
 struct S2C_CHANGE_GUN;
 struct S2C_CHANGE_GUNBuilder;
 
+struct S2C_START_ROUND;
+struct S2C_START_ROUNDBuilder;
+
 enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
@@ -123,11 +129,12 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_S2C_EQUIP_GUN = 24,
   MESSAGE_ID_C2S_CHANGE_GUN = 25,
   MESSAGE_ID_S2C_CHANGE_GUN = 26,
+  MESSAGE_ID_S2C_START_ROUND = 27,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
-  MESSAGE_ID_MAX = MESSAGE_ID_S2C_CHANGE_GUN
+  MESSAGE_ID_MAX = MESSAGE_ID_S2C_START_ROUND
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[27] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[28] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
@@ -155,13 +162,14 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[27] {
     MESSAGE_ID_C2S_EQUIP_GUN,
     MESSAGE_ID_S2C_EQUIP_GUN,
     MESSAGE_ID_C2S_CHANGE_GUN,
-    MESSAGE_ID_S2C_CHANGE_GUN
+    MESSAGE_ID_S2C_CHANGE_GUN,
+    MESSAGE_ID_S2C_START_ROUND
   };
   return values;
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[28] = {
+  static const char * const names[29] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
@@ -189,13 +197,14 @@ inline const char * const *EnumNamesMESSAGE_ID() {
     "S2C_EQUIP_GUN",
     "C2S_CHANGE_GUN",
     "S2C_CHANGE_GUN",
+    "S2C_START_ROUND",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameMESSAGE_ID(MESSAGE_ID e) {
-  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_CHANGE_GUN)) return "";
+  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_START_ROUND)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMESSAGE_ID()[index];
 }
@@ -306,6 +315,10 @@ template<> struct MESSAGE_IDTraits<C2S_CHANGE_GUN> {
 
 template<> struct MESSAGE_IDTraits<S2C_CHANGE_GUN> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_CHANGE_GUN;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_START_ROUND> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_START_ROUND;
 };
 
 bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type);
@@ -431,6 +444,9 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_CHANGE_GUN *packet_as_S2C_CHANGE_GUN() const {
     return packet_type() == MESSAGE_ID_S2C_CHANGE_GUN ? static_cast<const S2C_CHANGE_GUN *>(packet()) : nullptr;
   }
+  const S2C_START_ROUND *packet_as_S2C_START_ROUND() const {
+    return packet_type() == MESSAGE_ID_S2C_START_ROUND ? static_cast<const S2C_START_ROUND *>(packet()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PACKET_TYPE) &&
@@ -542,6 +558,10 @@ template<> inline const C2S_CHANGE_GUN *Message::packet_as<C2S_CHANGE_GUN>() con
 
 template<> inline const S2C_CHANGE_GUN *Message::packet_as<S2C_CHANGE_GUN>() const {
   return packet_as_S2C_CHANGE_GUN();
+}
+
+template<> inline const S2C_START_ROUND *Message::packet_as<S2C_START_ROUND>() const {
+  return packet_as_S2C_START_ROUND();
 }
 
 struct MessageBuilder {
@@ -1553,17 +1573,72 @@ inline flatbuffers::Offset<InitGunInfo> CreateInitGunInfo(
   return builder_.Finish();
 }
 
+struct RoundInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef RoundInfoBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ROUND = 4,
+    VT_POS = 6
+  };
+  int32_t round() const {
+    return GetField<int32_t>(VT_ROUND, 0);
+  }
+  const Vec3 *pos() const {
+    return GetStruct<const Vec3 *>(VT_POS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_ROUND) &&
+           VerifyField<Vec3>(verifier, VT_POS) &&
+           verifier.EndTable();
+  }
+};
+
+struct RoundInfoBuilder {
+  typedef RoundInfo Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_round(int32_t round) {
+    fbb_.AddElement<int32_t>(RoundInfo::VT_ROUND, round, 0);
+  }
+  void add_pos(const Vec3 *pos) {
+    fbb_.AddStruct(RoundInfo::VT_POS, pos);
+  }
+  explicit RoundInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<RoundInfo> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<RoundInfo>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<RoundInfo> CreateRoundInfo(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t round = 0,
+    const Vec3 *pos = 0) {
+  RoundInfoBuilder builder_(_fbb);
+  builder_.add_pos(pos);
+  builder_.add_round(round);
+  return builder_.Finish();
+}
+
 struct S2C_GAME_START FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef S2C_GAME_STARTBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_USERDATA = 4,
-    VT_GUNDATA = 6
+    VT_GUNDATA = 6,
+    VT_ROUNDDATA = 8
   };
   const flatbuffers::Vector<flatbuffers::Offset<InitUserInfo>> *userdata() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<InitUserInfo>> *>(VT_USERDATA);
   }
   const flatbuffers::Vector<flatbuffers::Offset<InitGunInfo>> *gundata() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<InitGunInfo>> *>(VT_GUNDATA);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<RoundInfo>> *rounddata() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<RoundInfo>> *>(VT_ROUNDDATA);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1573,6 +1648,9 @@ struct S2C_GAME_START FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_GUNDATA) &&
            verifier.VerifyVector(gundata()) &&
            verifier.VerifyVectorOfTables(gundata()) &&
+           VerifyOffset(verifier, VT_ROUNDDATA) &&
+           verifier.VerifyVector(rounddata()) &&
+           verifier.VerifyVectorOfTables(rounddata()) &&
            verifier.EndTable();
   }
 };
@@ -1586,6 +1664,9 @@ struct S2C_GAME_STARTBuilder {
   }
   void add_gundata(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<InitGunInfo>>> gundata) {
     fbb_.AddOffset(S2C_GAME_START::VT_GUNDATA, gundata);
+  }
+  void add_rounddata(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RoundInfo>>> rounddata) {
+    fbb_.AddOffset(S2C_GAME_START::VT_ROUNDDATA, rounddata);
   }
   explicit S2C_GAME_STARTBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1601,8 +1682,10 @@ struct S2C_GAME_STARTBuilder {
 inline flatbuffers::Offset<S2C_GAME_START> CreateS2C_GAME_START(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<InitUserInfo>>> userdata = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<InitGunInfo>>> gundata = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<InitGunInfo>>> gundata = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RoundInfo>>> rounddata = 0) {
   S2C_GAME_STARTBuilder builder_(_fbb);
+  builder_.add_rounddata(rounddata);
   builder_.add_gundata(gundata);
   builder_.add_userdata(userdata);
   return builder_.Finish();
@@ -1611,13 +1694,16 @@ inline flatbuffers::Offset<S2C_GAME_START> CreateS2C_GAME_START(
 inline flatbuffers::Offset<S2C_GAME_START> CreateS2C_GAME_STARTDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<flatbuffers::Offset<InitUserInfo>> *userdata = nullptr,
-    const std::vector<flatbuffers::Offset<InitGunInfo>> *gundata = nullptr) {
+    const std::vector<flatbuffers::Offset<InitGunInfo>> *gundata = nullptr,
+    const std::vector<flatbuffers::Offset<RoundInfo>> *rounddata = nullptr) {
   auto userdata__ = userdata ? _fbb.CreateVector<flatbuffers::Offset<InitUserInfo>>(*userdata) : 0;
   auto gundata__ = gundata ? _fbb.CreateVector<flatbuffers::Offset<InitGunInfo>>(*gundata) : 0;
+  auto rounddata__ = rounddata ? _fbb.CreateVector<flatbuffers::Offset<RoundInfo>>(*rounddata) : 0;
   return CreateS2C_GAME_START(
       _fbb,
       userdata__,
-      gundata__);
+      gundata__,
+      rounddata__);
 }
 
 struct C2S_CANCEL_MATCHING FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -2483,6 +2569,47 @@ inline flatbuffers::Offset<S2C_CHANGE_GUN> CreateS2C_CHANGE_GUNDirect(
       nowid);
 }
 
+struct S2C_START_ROUND FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_START_ROUNDBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ROUND = 4
+  };
+  int32_t round() const {
+    return GetField<int32_t>(VT_ROUND, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_ROUND) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_START_ROUNDBuilder {
+  typedef S2C_START_ROUND Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_round(int32_t round) {
+    fbb_.AddElement<int32_t>(S2C_START_ROUND::VT_ROUND, round, 0);
+  }
+  explicit S2C_START_ROUNDBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_START_ROUND> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_START_ROUND>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_START_ROUND> CreateS2C_START_ROUND(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t round = 0) {
+  S2C_START_ROUNDBuilder builder_(_fbb);
+  builder_.add_round(round);
+  return builder_.Finish();
+}
+
 inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type) {
   switch (type) {
     case MESSAGE_ID_NONE: {
@@ -2590,6 +2717,10 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_CHANGE_GUN: {
       auto ptr = reinterpret_cast<const S2C_CHANGE_GUN *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_START_ROUND: {
+      auto ptr = reinterpret_cast<const S2C_START_ROUND *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

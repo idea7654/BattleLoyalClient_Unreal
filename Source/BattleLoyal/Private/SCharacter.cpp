@@ -16,8 +16,10 @@
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
+#include "Camera/CameraShake.h"
 #include "Components/VerticalBox.h"
 #include "Animation/AnimMontage.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -413,6 +415,9 @@ void ASCharacter::Attack()
 				ASCharacter *HitCharacter = Cast<ASCharacter>(HitResult.GetActor());
 				if (HitCharacter)
 				{
+					FVector particlePoint = HitResult.ImpactPoint;
+					PlayNiagaraEffect(particlePoint, HitCharacter);
+					UGameplayStatics::GetPlayerController(GetWorld(), 0)->ClientStartCameraShake(MeleeCamShake);
 					UAnimInstance *Anim = HitCharacter->GetMesh()->GetAnimInstance();
 					if (Anim)
 					{
@@ -491,7 +496,6 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::Interact);
 	PlayerInputComponent->BindAction<FPlayAttackDelegate>("Attack", IE_Pressed, this, &ASCharacter::PlayAttack, true);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ASCharacter::Equip);
-	PlayerInputComponent->BindAction("Option", IE_Pressed, this, &ASCharacter::Option);
 }
 
 void ASCharacter::MoveForward(float Value)

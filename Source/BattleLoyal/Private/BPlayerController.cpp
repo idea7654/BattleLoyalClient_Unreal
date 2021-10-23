@@ -60,6 +60,7 @@ void ABPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 	EndOfPlay();
 	GetWorld()->GetTimerManager().ClearTimer(Timer);
+	Func_DeleSingle.Unbind();
 }
 
 void ABPlayerController::SetPlayers()
@@ -115,14 +116,14 @@ void ABPlayerController::ResetSessionTime()
 
 void ABPlayerController::GetPacket()
 {
-	while (Socket->MessageQueue.size() != 0)
+	while (Socket->MessageQueue.size() > 0)
 	{
 		Socket->QueueMutex.lock();
 		const Message *message = Socket->MessageQueue.front();
 		Socket->MessageQueue.pop();
 		Socket->QueueMutex.unlock();
-		if (message == nullptr)
-			continue;
+		//if (message == nullptr)
+		//	continue;
 
 		auto protocol = message->packet_type();
 
@@ -203,6 +204,7 @@ void ABPlayerController::GetPacket()
 			auto RecvData = static_cast<const S2C_PICKUP_GUN*>(message->packet());
 			std::string userNick = RecvData->nickname()->c_str();
 			int32 gunNum = RecvData->gunnum();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Pickup Gun!")));
 			
 			if (userNick != Socket->Nickname)
 			{
@@ -364,7 +366,7 @@ void ABPlayerController::GetPacket()
 			}
 			break;
 		}
-		case MESSAGE_ID::MESSAGE_ID_C2S_CHANGE_GUN:
+		case MESSAGE_ID::MESSAGE_ID_S2C_CHANGE_GUN:
 		{
 			auto RecvData = static_cast<const S2C_CHANGE_GUN*>(message->packet());
 			std::string userNick = RecvData->nickname()->c_str();
@@ -392,6 +394,17 @@ void ABPlayerController::GetPacket()
 			}
 			break;
 		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_START_ROUND:
+		{
+			auto RecvData = static_cast<const S2C_START_ROUND*>(message->packet());
+			int32 round = RecvData->round();
+
+			FVector RoundInfo = RoundVector[round - 1];
+			NowRound = RoundInfo;
+			RoundNum = round;
+			if (Func_DeleSingle.IsBound()) Func_DeleSingle.Execute();
+			if (Func_ZoneTime.IsBound()) Func_ZoneTime.Execute();
+		}
 		default:
 			break;
 		}
@@ -403,6 +416,7 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 	auto RecvData = static_cast<const S2C_GAME_START*>(packetMessage->packet());
 	auto userLength = RecvData->userdata()->Length();
 	auto gunLength = RecvData->gundata()->Length();
+	auto RoundLength = RecvData->rounddata()->Length();
 
 	PlayerCount = (int32)userLength;
 
@@ -426,6 +440,12 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 		gun->Z = RecvData->gundata()->Get(i)->pos()->z();
 
 		Socket->Guns.Add(gun);
+	}
+
+	for (int32 i = 0; i < (int32)RoundLength; i++)
+	{
+		FVector newVector = FVector(RecvData->rounddata()->Get(i)->pos()->x(), RecvData->rounddata()->Get(i)->pos()->y(), /*RecvData->rounddata()->Get(i)->pos()->z()*/ 280.0f);
+		RoundVector.Add(newVector);
 	}
 
 	FLatentActionInfo info;

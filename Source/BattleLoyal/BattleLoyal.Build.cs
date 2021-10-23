@@ -9,8 +9,10 @@ public class BattleLoyal : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "PhysicsCore" });
-
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+        
+		PrivateDependencyModuleNames.AddRange(new string[] {
+            
+        });
 
         PublicIncludePaths.AddRange(new string[] { "Includes" });
 

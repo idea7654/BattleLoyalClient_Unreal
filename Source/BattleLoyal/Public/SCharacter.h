@@ -108,15 +108,6 @@ protected:
 
 	ASCharacter *TargetCharacter;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
-	UUserWidget *OptionWidget;
-
-	UPROPERTY(BlueprintReadWrite, Category = "UI")
-	bool isOption = false;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void Option();
-
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -198,6 +189,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player")
 	UAnimMontage *HitReactMontage;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayNiagaraEffect(FVector EffectPoint, ASCharacter *HitCharacter);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<UCameraShakeBase> MeleeCamShake;
 
 private:
 	ClientSocket	*Socket;

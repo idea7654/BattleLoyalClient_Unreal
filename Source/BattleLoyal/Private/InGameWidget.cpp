@@ -7,6 +7,8 @@
 #include "Components/EditableTextBox.h"
 #include "Animation/WidgetAnimation.h"
 #include "Components/TextBlock.h"
+#include "BPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/Image.h"
 
 void UInGameWidget::ShowGameOver()
@@ -42,6 +44,8 @@ void UInGameWidget::NativeConstruct()
 	GameOver->SetRenderOpacity(0.0f);
 	Victory->SetRenderOpacity(0.0f);
 	KillText->SetText(FText::AsNumber(0));
+	ABPlayerController *MyController = Cast<ABPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	MyController->Func_ZoneTime.BindUFunction(this, FName("CallDeleFunc_SetRoundTime"));
 }
 
 void UInGameWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
