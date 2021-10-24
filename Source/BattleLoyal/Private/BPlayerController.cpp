@@ -405,6 +405,33 @@ void ABPlayerController::GetPacket()
 			if (Func_DeleSingle.IsBound()) Func_DeleSingle.Execute();
 			if (Func_ZoneTime.IsBound()) Func_ZoneTime.Execute();
 		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_SET_USER_POSITION:
+		{
+			auto RecvData = static_cast<const S2C_SET_USER_POSITION*>(message->packet());
+			int32 Sector = RecvData->sector();
+			OtherUserSetPos(Sector);
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_START_SIGN:
+		{
+			auto RecvData = static_cast<const S2C_START_SIGN*>(message->packet());
+			auto userLength = RecvData->userdata()->Length();
+			for (int32 i = 0; i < (int32)userLength; i++)
+			{
+				std::string userNick = RecvData->userdata()->Get(i)->nickname()->str();
+				for (int32 j = 0; j < Characters.Num(); j++)
+				{
+					if (FString(userNick.c_str()) == Characters[j]->GetName())
+					{
+						FVector newPos = FVector(RecvData->userdata()->Get(i)->pos()->x(), RecvData->userdata()->Get(i)->pos()->y(), RecvData->userdata()->Get(i)->pos()->z());
+						Characters[j]->SetActorLocation(newPos);
+					}
+				}
+			}
+			Sleep(1000);
+			StartSign();
+			break;
+		}
 		default:
 			break;
 		}
@@ -479,4 +506,12 @@ void ABPlayerController::SpawnGame()
 void ABPlayerController::CancelLoading()
 {
 	loading->RemoveFromViewport();
+}
+
+void ABPlayerController::SetMyPos(int32 Section)
+{
+	//패킷작성
+	int32 size = 0;
+	auto packet = Socket->WRITE_PU_C2S_SET_USER_POSITION(size, Section);
+	Socket->WriteTo(packet, size);
 }

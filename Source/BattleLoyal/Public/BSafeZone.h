@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ClientSocket.h"
 #include "BSafeZone.generated.h"
 
 UCLASS()
@@ -25,5 +26,11 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void CallDeleFunc_SetRound();
+
+	UFUNCTION(BlueprintCallable)
+	void DamagedByZone(int32 Round);
+
+private:
+	ClientSocket *Socket;
 
 };

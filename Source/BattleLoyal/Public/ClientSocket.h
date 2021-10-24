@@ -126,5 +126,6 @@ public:
 	uint8_t*		WRITE_PU_C2S_MELEE_ATTACK(int32 &refLength, std::string target, int32 combo);
 	uint8_t*		WRITE_PU_C2S_EQUIP_GUN(int32 &refLength, bool state);
 	uint8_t*		WRITE_PU_C2S_CHANGE_GUN(int32 &refLength, int32 originID, int32 nowID);
+	uint8_t*		WRITE_PU_C2S_SET_USER_POSITION(int32 &refLength, int32 sector);
 };
 

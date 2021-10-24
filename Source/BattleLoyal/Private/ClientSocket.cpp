@@ -401,3 +401,20 @@ uint8_t * ClientSocket::WRITE_PU_C2S_CHANGE_GUN(int32 & refLength, int32 originI
 
 	return data;
 }
+
+uint8_t * ClientSocket::WRITE_PU_C2S_SET_USER_POSITION(int32 & refLength, int32 sector)
+{
+	if (Nickname == "") return NULL;
+
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_SET_USER_POSITION(builder, userNick, sector);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_SET_USER_POSITION, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}

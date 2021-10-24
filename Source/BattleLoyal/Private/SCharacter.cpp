@@ -89,7 +89,7 @@ void ASCharacter::Interact()
 {
 	if (isInteract)
 	{
-		if (!hasGun)
+		if (!hasGun && DetectedWeapon)
 		{
 			DetectedWeapon->SetActorEnableCollision(false);
 			CurrentWeapon = DetectedWeapon;
@@ -320,6 +320,7 @@ void ASCharacter::SearchObjects()
 		else {
 			isInteract = false;
 			PressedTime = 0.0f;
+			DetectedWeapon = nullptr;
 		}
 
 		TargetCharacter = Cast<ASCharacter>(HitActor);

@@ -95,6 +95,15 @@ public:
 
 	FDele_Single Func_DeleSingle;
 	FZone_Time Func_ZoneTime;
+
+	UFUNCTION(BlueprintCallable)
+	void SetMyPos(int32 Section);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OtherUserSetPos(int32 Sector);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartSign();
 private:
 	ClientSocket	*Socket;
 };
