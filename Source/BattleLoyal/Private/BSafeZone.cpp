@@ -19,7 +19,6 @@ void ABSafeZone::BeginPlay()
 
 	ABPlayerController *MyController = Cast<ABPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	MyController->Func_DeleSingle.BindUFunction(this, FName("CallDeleFunc_SetRound"));
-	Socket = ClientSocket::GetSingleton();
 }
 
 // Called every frame
@@ -28,9 +27,3 @@ void ABSafeZone::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
-void ABSafeZone::DamagedByZone(int32 Round)
-{
-	//Packet√≥∏Æ!
-}
-

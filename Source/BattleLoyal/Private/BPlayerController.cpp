@@ -432,6 +432,22 @@ void ABPlayerController::GetPacket()
 			StartSign();
 			break;
 		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_ZONE_DAMAGE:
+		{
+			auto RecvData = static_cast<const S2C_ZONE_DAMAGE*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+			float damage = RecvData->damage();
+			for (auto &i : Characters)
+			{
+				if (i->GetName() == FString(userNick.c_str()))
+				{
+					i->HealthAmount -= damage;
+					i->SetHPUI();
+					break;
+				}
+			}
+			break;
+		}
 		default:
 			break;
 		}

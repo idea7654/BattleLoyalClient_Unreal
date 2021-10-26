@@ -110,6 +110,12 @@ struct S2C_SET_USER_POSITIONBuilder;
 struct S2C_START_SIGN;
 struct S2C_START_SIGNBuilder;
 
+struct C2S_ZONE_DAMAGE;
+struct C2S_ZONE_DAMAGEBuilder;
+
+struct S2C_ZONE_DAMAGE;
+struct S2C_ZONE_DAMAGEBuilder;
+
 enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
@@ -142,11 +148,13 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_C2S_SET_USER_POSITION = 28,
   MESSAGE_ID_S2C_SET_USER_POSITION = 29,
   MESSAGE_ID_S2C_START_SIGN = 30,
+  MESSAGE_ID_C2S_ZONE_DAMAGE = 31,
+  MESSAGE_ID_S2C_ZONE_DAMAGE = 32,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
-  MESSAGE_ID_MAX = MESSAGE_ID_S2C_START_SIGN
+  MESSAGE_ID_MAX = MESSAGE_ID_S2C_ZONE_DAMAGE
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[31] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[33] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
@@ -178,13 +186,15 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[31] {
     MESSAGE_ID_S2C_START_ROUND,
     MESSAGE_ID_C2S_SET_USER_POSITION,
     MESSAGE_ID_S2C_SET_USER_POSITION,
-    MESSAGE_ID_S2C_START_SIGN
+    MESSAGE_ID_S2C_START_SIGN,
+    MESSAGE_ID_C2S_ZONE_DAMAGE,
+    MESSAGE_ID_S2C_ZONE_DAMAGE
   };
   return values;
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[32] = {
+  static const char * const names[34] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
@@ -216,13 +226,15 @@ inline const char * const *EnumNamesMESSAGE_ID() {
     "C2S_SET_USER_POSITION",
     "S2C_SET_USER_POSITION",
     "S2C_START_SIGN",
+    "C2S_ZONE_DAMAGE",
+    "S2C_ZONE_DAMAGE",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameMESSAGE_ID(MESSAGE_ID e) {
-  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_START_SIGN)) return "";
+  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_ZONE_DAMAGE)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMESSAGE_ID()[index];
 }
@@ -349,6 +361,14 @@ template<> struct MESSAGE_IDTraits<S2C_SET_USER_POSITION> {
 
 template<> struct MESSAGE_IDTraits<S2C_START_SIGN> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_START_SIGN;
+};
+
+template<> struct MESSAGE_IDTraits<C2S_ZONE_DAMAGE> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_C2S_ZONE_DAMAGE;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_ZONE_DAMAGE> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_ZONE_DAMAGE;
 };
 
 bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type);
@@ -486,6 +506,12 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_START_SIGN *packet_as_S2C_START_SIGN() const {
     return packet_type() == MESSAGE_ID_S2C_START_SIGN ? static_cast<const S2C_START_SIGN *>(packet()) : nullptr;
   }
+  const C2S_ZONE_DAMAGE *packet_as_C2S_ZONE_DAMAGE() const {
+    return packet_type() == MESSAGE_ID_C2S_ZONE_DAMAGE ? static_cast<const C2S_ZONE_DAMAGE *>(packet()) : nullptr;
+  }
+  const S2C_ZONE_DAMAGE *packet_as_S2C_ZONE_DAMAGE() const {
+    return packet_type() == MESSAGE_ID_S2C_ZONE_DAMAGE ? static_cast<const S2C_ZONE_DAMAGE *>(packet()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PACKET_TYPE) &&
@@ -613,6 +639,14 @@ template<> inline const S2C_SET_USER_POSITION *Message::packet_as<S2C_SET_USER_P
 
 template<> inline const S2C_START_SIGN *Message::packet_as<S2C_START_SIGN>() const {
   return packet_as_S2C_START_SIGN();
+}
+
+template<> inline const C2S_ZONE_DAMAGE *Message::packet_as<C2S_ZONE_DAMAGE>() const {
+  return packet_as_C2S_ZONE_DAMAGE();
+}
+
+template<> inline const S2C_ZONE_DAMAGE *Message::packet_as<S2C_ZONE_DAMAGE>() const {
+  return packet_as_S2C_ZONE_DAMAGE();
 }
 
 struct MessageBuilder {
@@ -2839,6 +2873,132 @@ inline flatbuffers::Offset<S2C_START_SIGN> CreateS2C_START_SIGNDirect(
       userdata__);
 }
 
+struct C2S_ZONE_DAMAGE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef C2S_ZONE_DAMAGEBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_DAMAGE = 6
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  int32_t damage() const {
+    return GetField<int32_t>(VT_DAMAGE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<int32_t>(verifier, VT_DAMAGE) &&
+           verifier.EndTable();
+  }
+};
+
+struct C2S_ZONE_DAMAGEBuilder {
+  typedef C2S_ZONE_DAMAGE Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(C2S_ZONE_DAMAGE::VT_NICKNAME, nickname);
+  }
+  void add_damage(int32_t damage) {
+    fbb_.AddElement<int32_t>(C2S_ZONE_DAMAGE::VT_DAMAGE, damage, 0);
+  }
+  explicit C2S_ZONE_DAMAGEBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<C2S_ZONE_DAMAGE> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<C2S_ZONE_DAMAGE>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<C2S_ZONE_DAMAGE> CreateC2S_ZONE_DAMAGE(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    int32_t damage = 0) {
+  C2S_ZONE_DAMAGEBuilder builder_(_fbb);
+  builder_.add_damage(damage);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<C2S_ZONE_DAMAGE> CreateC2S_ZONE_DAMAGEDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    int32_t damage = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateC2S_ZONE_DAMAGE(
+      _fbb,
+      nickname__,
+      damage);
+}
+
+struct S2C_ZONE_DAMAGE FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_ZONE_DAMAGEBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_DAMAGE = 6
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  int32_t damage() const {
+    return GetField<int32_t>(VT_DAMAGE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<int32_t>(verifier, VT_DAMAGE) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_ZONE_DAMAGEBuilder {
+  typedef S2C_ZONE_DAMAGE Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(S2C_ZONE_DAMAGE::VT_NICKNAME, nickname);
+  }
+  void add_damage(int32_t damage) {
+    fbb_.AddElement<int32_t>(S2C_ZONE_DAMAGE::VT_DAMAGE, damage, 0);
+  }
+  explicit S2C_ZONE_DAMAGEBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_ZONE_DAMAGE> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_ZONE_DAMAGE>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_ZONE_DAMAGE> CreateS2C_ZONE_DAMAGE(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    int32_t damage = 0) {
+  S2C_ZONE_DAMAGEBuilder builder_(_fbb);
+  builder_.add_damage(damage);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<S2C_ZONE_DAMAGE> CreateS2C_ZONE_DAMAGEDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    int32_t damage = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateS2C_ZONE_DAMAGE(
+      _fbb,
+      nickname__,
+      damage);
+}
+
 inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type) {
   switch (type) {
     case MESSAGE_ID_NONE: {
@@ -2962,6 +3122,14 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_START_SIGN: {
       auto ptr = reinterpret_cast<const S2C_START_SIGN *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_C2S_ZONE_DAMAGE: {
+      auto ptr = reinterpret_cast<const C2S_ZONE_DAMAGE *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_ZONE_DAMAGE: {
+      auto ptr = reinterpret_cast<const S2C_ZONE_DAMAGE *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

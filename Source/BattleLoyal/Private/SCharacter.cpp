@@ -194,6 +194,21 @@ void ASCharacter::SetBullet()
 	GameUI->SetBulletValue(Bullet);
 }
 
+void ASCharacter::SetZoneDamage(int32 round)
+{
+	int32 size = 0;
+	uint8_t* packet;
+	if (round == 1)
+	{
+		packet = Socket->WRITE_PU_C2S_ZONE_DAMAGE(size, 5);
+	}
+	else
+	{
+		packet = Socket->WRITE_PU_C2S_ZONE_DAMAGE(size, 20);
+	}
+	Socket->WriteTo(packet, size);
+}
+
 void ASCharacter::BeginZoom()
 {
 	bWantsToZoom = true;

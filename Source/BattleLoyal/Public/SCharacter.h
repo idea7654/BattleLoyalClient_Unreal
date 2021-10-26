@@ -196,6 +196,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<UCameraShakeBase> MeleeCamShake;
 
+	UFUNCTION(BlueprintCallable)
+	void SetZoneDamage(int32 round);
+
 private:
 	ClientSocket	*Socket;
 };

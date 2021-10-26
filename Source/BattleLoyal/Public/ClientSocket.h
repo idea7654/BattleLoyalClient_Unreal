@@ -127,5 +127,6 @@ public:
 	uint8_t*		WRITE_PU_C2S_EQUIP_GUN(int32 &refLength, bool state);
 	uint8_t*		WRITE_PU_C2S_CHANGE_GUN(int32 &refLength, int32 originID, int32 nowID);
 	uint8_t*		WRITE_PU_C2S_SET_USER_POSITION(int32 &refLength, int32 sector);
+	uint8_t*		WRITE_PU_C2S_ZONE_DAMAGE(int32 &refLength, int32 damage);
 };
 

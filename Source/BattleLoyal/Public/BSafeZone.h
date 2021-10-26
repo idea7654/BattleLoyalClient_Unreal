@@ -26,11 +26,4 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void CallDeleFunc_SetRound();
-
-	UFUNCTION(BlueprintCallable)
-	void DamagedByZone(int32 Round);
-
-private:
-	ClientSocket *Socket;
-
 };

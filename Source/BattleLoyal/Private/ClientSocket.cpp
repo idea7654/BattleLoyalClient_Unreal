@@ -418,3 +418,20 @@ uint8_t * ClientSocket::WRITE_PU_C2S_SET_USER_POSITION(int32 & refLength, int32 
 
 	return data;
 }
+
+uint8_t * ClientSocket::WRITE_PU_C2S_ZONE_DAMAGE(int32 & refLength, int32 damage)
+{
+	if (Nickname == "") return NULL;
+
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_ZONE_DAMAGE(builder, userNick, damage);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_ZONE_DAMAGE, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
