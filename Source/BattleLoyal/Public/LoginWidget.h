@@ -47,12 +47,6 @@ public:
 	UFUNCTION()
 	void ToRegister();
 
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUserWidget> WhatWidget;
-
-	UPROPERTY()
-	URegisterWidget *RegisterWidget;
-
 	void NativeConstruct() override;
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

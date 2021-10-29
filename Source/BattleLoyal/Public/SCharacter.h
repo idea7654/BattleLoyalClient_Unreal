@@ -159,8 +159,8 @@ public:
 	UFUNCTION()
 	void AttackEnd();
 
-	UPROPERTY(EditAnywhere)
-	class UBoxComponent *AttackCheck;
+	//UPROPERTY(EditAnywhere)
+	//class UBoxComponent *AttackCheck;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 CurrentCombo;

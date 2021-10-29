@@ -116,7 +116,8 @@ void ABPlayerController::ResetSessionTime()
 
 void ABPlayerController::GetPacket()
 {
-	while (Socket->MessageQueue.size() > 0)
+	//while (Socket->MessageQueue.size() > 0)
+	if(Socket->MessageQueue.size() > 0)
 	{
 		Socket->QueueMutex.lock();
 		const Message *message = Socket->MessageQueue.front();
@@ -276,7 +277,7 @@ void ABPlayerController::GetPacket()
 					chara->SetGameInfoUI("kill", PlayerKill);
 				}
 
-				if (chara->GetName() == FString(Socket->Nickname.c_str()))
+				if (chara->GetName() == FString(Socket->Nickname.c_str()) && userNick != "Zone")
 				{
 					chara->SetGameInfoUI("person", PlayerCount);
 					chara->AddSlot(FString(userNick.c_str()), FString(targetNick.c_str()));
@@ -289,6 +290,19 @@ void ABPlayerController::GetPacket()
 					chara->SetDie();
 					removeCharacter = chara;
 					chara->SetGameOver();
+				}
+
+				if (userNick == "Zone")
+				{
+					if (chara->GetName() == FString(targetNick.c_str()))
+					{
+						chara->AddSlot("Zone", FString(targetNick.c_str()));
+						chara->HealthAmount = 0.0f;
+						chara->SetHPUI();
+						chara->SetDie();
+						removeCharacter = chara;
+						chara->SetGameOver();
+					}
 				}
 			}
 
