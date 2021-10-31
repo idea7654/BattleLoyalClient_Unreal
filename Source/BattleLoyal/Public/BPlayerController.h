@@ -30,6 +30,9 @@ public:
 	TSubclassOf<class ASWeapon> GunSpawn;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TSubclassOf<class ASRecover> RecoverSpawn;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
 	FName LevelName = FName(TEXT("GameLevel"));
 
 	UPROPERTY(BlueprintReadWrite, Category = "Spawning")
@@ -57,6 +60,9 @@ public:
 
 	UPROPERTY()
 	TArray<ASWeapon*>			Guns;
+
+	UPROPERTY()
+	TArray<class ASRecover*>	Recovers;
 
 	UPROPERTY()
 	class ASWeapon* TargetGun;

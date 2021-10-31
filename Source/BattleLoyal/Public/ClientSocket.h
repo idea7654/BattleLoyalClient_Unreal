@@ -51,6 +51,15 @@ public:
 	float Z;
 };
 
+struct Recover
+{
+public:
+	int32 id;
+	float X;
+	float Y;
+	float Z;
+};
+
 class BATTLELOYAL_API ClientSocket : public FRunnable
 {
 public:
@@ -103,6 +112,9 @@ public: //For Game Thread
 
 	UPROPERTY(VisibleAnywhere, Category = "Spawning")
 	TArray<TSharedPtr<Gun>>		Guns;
+
+	UPROPERTY(VisibleAnywhere, Category = "Spawning")
+	TArray<TSharedPtr<Recover>>		Recovers;
 
 	void SetPlayerController(class ABPlayerController *playerController);
 

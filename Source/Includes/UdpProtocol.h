@@ -53,6 +53,9 @@ struct InitUserInfoBuilder;
 struct InitGunInfo;
 struct InitGunInfoBuilder;
 
+struct RecoverInfo;
+struct RecoverInfoBuilder;
+
 struct RoundInfo;
 struct RoundInfoBuilder;
 
@@ -116,6 +119,12 @@ struct C2S_ZONE_DAMAGEBuilder;
 struct S2C_ZONE_DAMAGE;
 struct S2C_ZONE_DAMAGEBuilder;
 
+struct C2S_RECOVER_HP;
+struct C2S_RECOVER_HPBuilder;
+
+struct S2C_RECOVER_HP;
+struct S2C_RECOVER_HPBuilder;
+
 enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_NONE = 0,
   MESSAGE_ID_S2C_MOVE = 1,
@@ -150,11 +159,13 @@ enum MESSAGE_ID : uint8_t {
   MESSAGE_ID_S2C_START_SIGN = 30,
   MESSAGE_ID_C2S_ZONE_DAMAGE = 31,
   MESSAGE_ID_S2C_ZONE_DAMAGE = 32,
+  MESSAGE_ID_C2S_RECOVER_HP = 33,
+  MESSAGE_ID_S2C_RECOVER_HP = 34,
   MESSAGE_ID_MIN = MESSAGE_ID_NONE,
-  MESSAGE_ID_MAX = MESSAGE_ID_S2C_ZONE_DAMAGE
+  MESSAGE_ID_MAX = MESSAGE_ID_S2C_RECOVER_HP
 };
 
-inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[33] {
+inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[35] {
   static const MESSAGE_ID values[] = {
     MESSAGE_ID_NONE,
     MESSAGE_ID_S2C_MOVE,
@@ -188,13 +199,15 @@ inline const MESSAGE_ID (&EnumValuesMESSAGE_ID())[33] {
     MESSAGE_ID_S2C_SET_USER_POSITION,
     MESSAGE_ID_S2C_START_SIGN,
     MESSAGE_ID_C2S_ZONE_DAMAGE,
-    MESSAGE_ID_S2C_ZONE_DAMAGE
+    MESSAGE_ID_S2C_ZONE_DAMAGE,
+    MESSAGE_ID_C2S_RECOVER_HP,
+    MESSAGE_ID_S2C_RECOVER_HP
   };
   return values;
 }
 
 inline const char * const *EnumNamesMESSAGE_ID() {
-  static const char * const names[34] = {
+  static const char * const names[36] = {
     "NONE",
     "S2C_MOVE",
     "S2C_SHOOT",
@@ -228,13 +241,15 @@ inline const char * const *EnumNamesMESSAGE_ID() {
     "S2C_START_SIGN",
     "C2S_ZONE_DAMAGE",
     "S2C_ZONE_DAMAGE",
+    "C2S_RECOVER_HP",
+    "S2C_RECOVER_HP",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameMESSAGE_ID(MESSAGE_ID e) {
-  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_ZONE_DAMAGE)) return "";
+  if (flatbuffers::IsOutRange(e, MESSAGE_ID_NONE, MESSAGE_ID_S2C_RECOVER_HP)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMESSAGE_ID()[index];
 }
@@ -369,6 +384,14 @@ template<> struct MESSAGE_IDTraits<C2S_ZONE_DAMAGE> {
 
 template<> struct MESSAGE_IDTraits<S2C_ZONE_DAMAGE> {
   static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_ZONE_DAMAGE;
+};
+
+template<> struct MESSAGE_IDTraits<C2S_RECOVER_HP> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_C2S_RECOVER_HP;
+};
+
+template<> struct MESSAGE_IDTraits<S2C_RECOVER_HP> {
+  static const MESSAGE_ID enum_value = MESSAGE_ID_S2C_RECOVER_HP;
 };
 
 bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type);
@@ -512,6 +535,12 @@ struct Message FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const S2C_ZONE_DAMAGE *packet_as_S2C_ZONE_DAMAGE() const {
     return packet_type() == MESSAGE_ID_S2C_ZONE_DAMAGE ? static_cast<const S2C_ZONE_DAMAGE *>(packet()) : nullptr;
   }
+  const C2S_RECOVER_HP *packet_as_C2S_RECOVER_HP() const {
+    return packet_type() == MESSAGE_ID_C2S_RECOVER_HP ? static_cast<const C2S_RECOVER_HP *>(packet()) : nullptr;
+  }
+  const S2C_RECOVER_HP *packet_as_S2C_RECOVER_HP() const {
+    return packet_type() == MESSAGE_ID_S2C_RECOVER_HP ? static_cast<const S2C_RECOVER_HP *>(packet()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PACKET_TYPE) &&
@@ -647,6 +676,14 @@ template<> inline const C2S_ZONE_DAMAGE *Message::packet_as<C2S_ZONE_DAMAGE>() c
 
 template<> inline const S2C_ZONE_DAMAGE *Message::packet_as<S2C_ZONE_DAMAGE>() const {
   return packet_as_S2C_ZONE_DAMAGE();
+}
+
+template<> inline const C2S_RECOVER_HP *Message::packet_as<C2S_RECOVER_HP>() const {
+  return packet_as_C2S_RECOVER_HP();
+}
+
+template<> inline const S2C_RECOVER_HP *Message::packet_as<S2C_RECOVER_HP>() const {
+  return packet_as_S2C_RECOVER_HP();
 }
 
 struct MessageBuilder {
@@ -1658,6 +1695,57 @@ inline flatbuffers::Offset<InitGunInfo> CreateInitGunInfo(
   return builder_.Finish();
 }
 
+struct RecoverInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef RecoverInfoBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_POS = 6
+  };
+  int32_t id() const {
+    return GetField<int32_t>(VT_ID, 0);
+  }
+  const Vec3 *pos() const {
+    return GetStruct<const Vec3 *>(VT_POS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_ID) &&
+           VerifyField<Vec3>(verifier, VT_POS) &&
+           verifier.EndTable();
+  }
+};
+
+struct RecoverInfoBuilder {
+  typedef RecoverInfo Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_id(int32_t id) {
+    fbb_.AddElement<int32_t>(RecoverInfo::VT_ID, id, 0);
+  }
+  void add_pos(const Vec3 *pos) {
+    fbb_.AddStruct(RecoverInfo::VT_POS, pos);
+  }
+  explicit RecoverInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<RecoverInfo> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<RecoverInfo>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<RecoverInfo> CreateRecoverInfo(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t id = 0,
+    const Vec3 *pos = 0) {
+  RecoverInfoBuilder builder_(_fbb);
+  builder_.add_pos(pos);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
 struct RoundInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef RoundInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1714,7 +1802,8 @@ struct S2C_GAME_START FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_USERDATA = 4,
     VT_GUNDATA = 6,
-    VT_ROUNDDATA = 8
+    VT_ROUNDDATA = 8,
+    VT_RECOVERDATA = 10
   };
   const flatbuffers::Vector<flatbuffers::Offset<InitUserInfo>> *userdata() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<InitUserInfo>> *>(VT_USERDATA);
@@ -1724,6 +1813,9 @@ struct S2C_GAME_START FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   const flatbuffers::Vector<flatbuffers::Offset<RoundInfo>> *rounddata() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<RoundInfo>> *>(VT_ROUNDDATA);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<RecoverInfo>> *recoverdata() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<RecoverInfo>> *>(VT_RECOVERDATA);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1736,6 +1828,9 @@ struct S2C_GAME_START FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_ROUNDDATA) &&
            verifier.VerifyVector(rounddata()) &&
            verifier.VerifyVectorOfTables(rounddata()) &&
+           VerifyOffset(verifier, VT_RECOVERDATA) &&
+           verifier.VerifyVector(recoverdata()) &&
+           verifier.VerifyVectorOfTables(recoverdata()) &&
            verifier.EndTable();
   }
 };
@@ -1753,6 +1848,9 @@ struct S2C_GAME_STARTBuilder {
   void add_rounddata(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RoundInfo>>> rounddata) {
     fbb_.AddOffset(S2C_GAME_START::VT_ROUNDDATA, rounddata);
   }
+  void add_recoverdata(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RecoverInfo>>> recoverdata) {
+    fbb_.AddOffset(S2C_GAME_START::VT_RECOVERDATA, recoverdata);
+  }
   explicit S2C_GAME_STARTBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1768,8 +1866,10 @@ inline flatbuffers::Offset<S2C_GAME_START> CreateS2C_GAME_START(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<InitUserInfo>>> userdata = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<InitGunInfo>>> gundata = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RoundInfo>>> rounddata = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RoundInfo>>> rounddata = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<RecoverInfo>>> recoverdata = 0) {
   S2C_GAME_STARTBuilder builder_(_fbb);
+  builder_.add_recoverdata(recoverdata);
   builder_.add_rounddata(rounddata);
   builder_.add_gundata(gundata);
   builder_.add_userdata(userdata);
@@ -1780,15 +1880,18 @@ inline flatbuffers::Offset<S2C_GAME_START> CreateS2C_GAME_STARTDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<flatbuffers::Offset<InitUserInfo>> *userdata = nullptr,
     const std::vector<flatbuffers::Offset<InitGunInfo>> *gundata = nullptr,
-    const std::vector<flatbuffers::Offset<RoundInfo>> *rounddata = nullptr) {
+    const std::vector<flatbuffers::Offset<RoundInfo>> *rounddata = nullptr,
+    const std::vector<flatbuffers::Offset<RecoverInfo>> *recoverdata = nullptr) {
   auto userdata__ = userdata ? _fbb.CreateVector<flatbuffers::Offset<InitUserInfo>>(*userdata) : 0;
   auto gundata__ = gundata ? _fbb.CreateVector<flatbuffers::Offset<InitGunInfo>>(*gundata) : 0;
   auto rounddata__ = rounddata ? _fbb.CreateVector<flatbuffers::Offset<RoundInfo>>(*rounddata) : 0;
+  auto recoverdata__ = recoverdata ? _fbb.CreateVector<flatbuffers::Offset<RecoverInfo>>(*recoverdata) : 0;
   return CreateS2C_GAME_START(
       _fbb,
       userdata__,
       gundata__,
-      rounddata__);
+      rounddata__,
+      recoverdata__);
 }
 
 struct C2S_CANCEL_MATCHING FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -2999,6 +3102,110 @@ inline flatbuffers::Offset<S2C_ZONE_DAMAGE> CreateS2C_ZONE_DAMAGEDirect(
       damage);
 }
 
+struct C2S_RECOVER_HP FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef C2S_RECOVER_HPBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NICKNAME = 4,
+    VT_OBJ = 6
+  };
+  const flatbuffers::String *nickname() const {
+    return GetPointer<const flatbuffers::String *>(VT_NICKNAME);
+  }
+  int32_t obj() const {
+    return GetField<int32_t>(VT_OBJ, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NICKNAME) &&
+           verifier.VerifyString(nickname()) &&
+           VerifyField<int32_t>(verifier, VT_OBJ) &&
+           verifier.EndTable();
+  }
+};
+
+struct C2S_RECOVER_HPBuilder {
+  typedef C2S_RECOVER_HP Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_nickname(flatbuffers::Offset<flatbuffers::String> nickname) {
+    fbb_.AddOffset(C2S_RECOVER_HP::VT_NICKNAME, nickname);
+  }
+  void add_obj(int32_t obj) {
+    fbb_.AddElement<int32_t>(C2S_RECOVER_HP::VT_OBJ, obj, 0);
+  }
+  explicit C2S_RECOVER_HPBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<C2S_RECOVER_HP> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<C2S_RECOVER_HP>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<C2S_RECOVER_HP> CreateC2S_RECOVER_HP(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> nickname = 0,
+    int32_t obj = 0) {
+  C2S_RECOVER_HPBuilder builder_(_fbb);
+  builder_.add_obj(obj);
+  builder_.add_nickname(nickname);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<C2S_RECOVER_HP> CreateC2S_RECOVER_HPDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *nickname = nullptr,
+    int32_t obj = 0) {
+  auto nickname__ = nickname ? _fbb.CreateString(nickname) : 0;
+  return CreateC2S_RECOVER_HP(
+      _fbb,
+      nickname__,
+      obj);
+}
+
+struct S2C_RECOVER_HP FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef S2C_RECOVER_HPBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_OBJ = 4
+  };
+  int32_t obj() const {
+    return GetField<int32_t>(VT_OBJ, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_OBJ) &&
+           verifier.EndTable();
+  }
+};
+
+struct S2C_RECOVER_HPBuilder {
+  typedef S2C_RECOVER_HP Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_obj(int32_t obj) {
+    fbb_.AddElement<int32_t>(S2C_RECOVER_HP::VT_OBJ, obj, 0);
+  }
+  explicit S2C_RECOVER_HPBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<S2C_RECOVER_HP> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<S2C_RECOVER_HP>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<S2C_RECOVER_HP> CreateS2C_RECOVER_HP(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t obj = 0) {
+  S2C_RECOVER_HPBuilder builder_(_fbb);
+  builder_.add_obj(obj);
+  return builder_.Finish();
+}
+
 inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, MESSAGE_ID type) {
   switch (type) {
     case MESSAGE_ID_NONE: {
@@ -3130,6 +3337,14 @@ inline bool VerifyMESSAGE_ID(flatbuffers::Verifier &verifier, const void *obj, M
     }
     case MESSAGE_ID_S2C_ZONE_DAMAGE: {
       auto ptr = reinterpret_cast<const S2C_ZONE_DAMAGE *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_C2S_RECOVER_HP: {
+      auto ptr = reinterpret_cast<const C2S_RECOVER_HP *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MESSAGE_ID_S2C_RECOVER_HP: {
+      auto ptr = reinterpret_cast<const S2C_RECOVER_HP *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

@@ -12,6 +12,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "LoadingWidget.h"
 #include "SWeapon.h"
+#include "SRecover.h"
 
 ABPlayerController::ABPlayerController()
 {
@@ -34,6 +35,7 @@ void ABPlayerController::EndOfPlay()
 	Socket->isMatching = false;
 	Socket->Nickname = "";
 	Socket->Guns.Empty();
+	Socket->Recovers.Empty();
 }
 
 void ABPlayerController::Tick(float DeltaSeconds)
@@ -105,6 +107,20 @@ void ABPlayerController::SetPlayers()
 
 		ASWeapon *SpawnGun = GetWorld()->SpawnActor<ASWeapon>(GunSpawn, SpawnLocationPos, FRotator::ZeroRotator, SpawnParams);
 		Guns.Add(SpawnGun);
+	}
+
+	for (auto &recover : Socket->Recovers)
+	{
+		FVector SpawnLocationPos;
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+		SpawnParams.Name = FName(*(FString::FromInt(recover->id) + "Recover"));
+		SpawnLocationPos = FVector(recover->X, recover->Y, recover->Z);
+
+		ASRecover *SpawnRecover = GetWorld()->SpawnActor<ASRecover>(RecoverSpawn, SpawnLocationPos, FRotator::ZeroRotator, SpawnParams);
+		Recovers.Add(SpawnRecover);
 	}
 }
 
@@ -206,7 +222,7 @@ void ABPlayerController::GetPacket()
 			std::string userNick = RecvData->nickname()->c_str();
 			int32 gunNum = RecvData->gunnum();
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Pickup Gun!")));
-			
+
 			if (userNick != Socket->Nickname)
 			{
 				for (auto &gun : Guns)
@@ -217,7 +233,7 @@ void ABPlayerController::GetPacket()
 						break;
 					}
 				}
-				
+
 				for (auto &chara : Characters)
 				{
 					if (chara->GetName() == FString(userNick.c_str()))
@@ -462,6 +478,10 @@ void ABPlayerController::GetPacket()
 			}
 			break;
 		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_RECOVER_HP:
+		{
+
+		}
 		default:
 			break;
 		}
@@ -474,6 +494,7 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 	auto userLength = RecvData->userdata()->Length();
 	auto gunLength = RecvData->gundata()->Length();
 	auto RoundLength = RecvData->rounddata()->Length();
+	auto RecoverLength = RecvData->recoverdata()->Length();
 
 	PlayerCount = (int32)userLength;
 
@@ -503,6 +524,17 @@ void ABPlayerController::GameStart(const Message *packetMessage)
 	{
 		FVector newVector = FVector(RecvData->rounddata()->Get(i)->pos()->x(), RecvData->rounddata()->Get(i)->pos()->y(), /*RecvData->rounddata()->Get(i)->pos()->z()*/ 280.0f);
 		RoundVector.Add(newVector);
+	}
+
+	for (int32 i = 0; i < (int32)RecoverLength; i++)
+	{
+		TSharedPtr<Recover> recover(new Recover());
+		recover->id = RecvData->recoverdata()->Get(i)->id();
+		recover->X = RecvData->recoverdata()->Get(i)->pos()->x();
+		recover->Y = RecvData->recoverdata()->Get(i)->pos()->y();
+		recover->Z = RecvData->recoverdata()->Get(i)->pos()->z();
+
+		Socket->Recovers.Add(recover);
 	}
 
 	FLatentActionInfo info;

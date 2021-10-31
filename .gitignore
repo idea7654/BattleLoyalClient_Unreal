@@ -62,6 +62,7 @@ Content/CloseCombatAnimSet
 Content/MMDModel
 Content/SwordSwipesAnimTrail
 Content/SafeZone
+Content/Food_Pack_01
 
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/

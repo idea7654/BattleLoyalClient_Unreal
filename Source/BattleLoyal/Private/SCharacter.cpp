@@ -20,6 +20,7 @@
 #include "Components/VerticalBox.h"
 #include "Animation/AnimMontage.h"
 #include "Kismet/GameplayStatics.h"
+#include "SRecover.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -136,6 +137,11 @@ void ASCharacter::Interact()
 				SetBullet();
 				TargetCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			}
+		}
+		
+		if (RecoverObj != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Recover Event!!"));
 		}
 	}
 	else
@@ -350,6 +356,16 @@ void ASCharacter::SearchObjects()
 				isInteract = false;
 			}
 		}//여기 고쳐서 시체파밍 가능하도록!
+
+		RecoverObj = Cast<ASRecover>(HitActor);
+		if (RecoverObj)
+		{
+			GameUI->ShowInteractText();
+			isInteract = true;
+		}
+		else {
+			isInteract = false;
+		}
 	}
 	else {
 		PressedTime = 0.0f;

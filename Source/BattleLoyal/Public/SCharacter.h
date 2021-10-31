@@ -90,7 +90,7 @@ protected:
 	float TurnSpeed;
 	float TurnSpeedLast;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isJump = false;
 	bool isCrouch = false;
 	bool CurrentCrouch = false;
@@ -107,6 +107,8 @@ protected:
 	UAnimMontage *EquipMontage;
 
 	ASCharacter *TargetCharacter;
+
+	class ASRecover *RecoverObj;
 
 public:
 	// Called every frame
