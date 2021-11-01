@@ -49,6 +49,7 @@ ASCharacter::ASCharacter()
 
 	isInteract = false;
 	EquipGun = false;
+	hasGun = false;
 	Bullet = 200;
 }
 
@@ -139,9 +140,15 @@ void ASCharacter::Interact()
 			}
 		}
 		
-		if (RecoverObj != nullptr)
+		if (RecoverObj)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Recover Event!!"));
+			int32 size = 0;
+			FString objName = RecoverObj->GetName();
+			FString objNum = objName.Replace(TEXT("Recover"), TEXT(""));
+			int32 obj = FCString::Atoi(*objNum);
+
+			auto packet = Socket->WRITE_PU_C2S_RECOVER_HP(size, obj);
+			Socket->WriteTo(packet, size);
 		}
 	}
 	else
@@ -204,7 +211,7 @@ void ASCharacter::SetZoneDamage(int32 round)
 {
 	int32 size = 0;
 	uint8_t* packet;
-	if (round == 1)
+	if (round == 0 || round == 1)
 	{
 		packet = Socket->WRITE_PU_C2S_ZONE_DAMAGE(size, 5);
 	}
@@ -362,9 +369,6 @@ void ASCharacter::SearchObjects()
 		{
 			GameUI->ShowInteractText();
 			isInteract = true;
-		}
-		else {
-			isInteract = false;
 		}
 	}
 	else {

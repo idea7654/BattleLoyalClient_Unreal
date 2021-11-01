@@ -136,9 +136,9 @@ RETRY:
 	MessageQueue.push(message);
 	QueueMutex.unlock();
 
-	if (message->packet_type() == MESSAGE_ID::MESSAGE_ID_S2C_PICKUP_GUN)
+	if (message->packet_type() == MESSAGE_ID::MESSAGE_ID_S2C_ZONE_DAMAGE)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PacketCome!")));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PacketCome!")));
 	}
 
 	if (remainLength > PacketLength)
@@ -426,6 +426,23 @@ uint8_t * ClientSocket::WRITE_PU_C2S_ZONE_DAMAGE(int32 & refLength, int32 damage
 	auto userNick = builder.CreateString(Nickname);
 	auto makePacket = CreateC2S_ZONE_DAMAGE(builder, userNick, damage);
 	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_ZONE_DAMAGE, makePacket.Union());
+
+	builder.Finish(newPacket);
+	refLength = builder.GetSize();
+
+	const auto data = builder.GetBufferPointer();
+	builder.Clear();
+
+	return data;
+}
+
+uint8_t * ClientSocket::WRITE_PU_C2S_RECOVER_HP(int32 & refLength, int32 obj)
+{
+	if (Nickname == "") return NULL;
+
+	auto userNick = builder.CreateString(Nickname);
+	auto makePacket = CreateC2S_RECOVER_HP(builder, userNick, obj);
+	auto newPacket = CreateMessage(builder, MESSAGE_ID::MESSAGE_ID_C2S_RECOVER_HP, makePacket.Union());
 
 	builder.Finish(newPacket);
 	refLength = builder.GetSize();

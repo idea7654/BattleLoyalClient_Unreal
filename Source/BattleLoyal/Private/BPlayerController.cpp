@@ -434,6 +434,25 @@ void ABPlayerController::GetPacket()
 			RoundNum = round;
 			if (Func_DeleSingle.IsBound()) Func_DeleSingle.Execute();
 			if (Func_ZoneTime.IsBound()) Func_ZoneTime.Execute();
+			break;
+		}
+		case MESSAGE_ID::MESSAGE_ID_S2C_ZONE_DAMAGE:
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Take Damage"));
+			auto RecvData = static_cast<const S2C_ZONE_DAMAGE*>(message->packet());
+			std::string userNick = RecvData->nickname()->c_str();
+
+			int32 damage = RecvData->damage();
+			for (auto &i : Characters)
+			{
+				if (i->GetName() == FString(userNick.c_str()))
+				{
+					i->HealthAmount -= (float)damage;
+					i->SetHPUI();
+					break;
+				}
+			}
+			break;
 		}
 		case MESSAGE_ID::MESSAGE_ID_S2C_SET_USER_POSITION:
 		{
@@ -462,25 +481,30 @@ void ABPlayerController::GetPacket()
 			StartSign();
 			break;
 		}
-		case MESSAGE_ID::MESSAGE_ID_S2C_ZONE_DAMAGE:
+		case MESSAGE_ID::MESSAGE_ID_S2C_RECOVER_HP:
 		{
-			auto RecvData = static_cast<const S2C_ZONE_DAMAGE*>(message->packet());
+			auto RecvData = static_cast<const S2C_RECOVER_HP*>(message->packet());
+			int32 objNum = RecvData->obj();
 			std::string userNick = RecvData->nickname()->c_str();
-			float damage = RecvData->damage();
+
+			for (auto &i : Recovers)
+			{
+				if (i->GetName() == FString::FromInt(objNum) + "Recover")
+				{
+					i->Destroy();
+				}
+			}
+
 			for (auto &i : Characters)
 			{
 				if (i->GetName() == FString(userNick.c_str()))
 				{
-					i->HealthAmount -= damage;
-					i->SetHPUI();
-					break;
+					i->HealthAmount += 20;
+					if (i->HealthAmount > 100)
+						i->HealthAmount = 100;
 				}
 			}
 			break;
-		}
-		case MESSAGE_ID::MESSAGE_ID_S2C_RECOVER_HP:
-		{
-
 		}
 		default:
 			break;
