@@ -222,6 +222,11 @@ void ASCharacter::SetZoneDamage(int32 round)
 	Socket->WriteTo(packet, size);
 }
 
+void ASCharacter::RemoveGameUI()
+{
+	GameUI->RemoveFromParent();
+}
+
 void ASCharacter::BeginZoom()
 {
 	bWantsToZoom = true;
@@ -419,7 +424,16 @@ void ASCharacter::SetGameOver()
 
 void ASCharacter::SetVictory()
 {
-	//GameUI->ShowVictory();
+	if (!bVictory)
+	{
+		bVictory = true;
+		GameUI->ShowVictory();
+		GetMovementComponent()->StopMovementImmediately();
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(5.0f);
+	}
 }
 
 void ASCharacter::SetGameInfoUI(FString action, int32 count)
@@ -452,7 +466,7 @@ void ASCharacter::Attack()
 				if (HitCharacter)
 				{
 					FVector particlePoint = HitResult.ImpactPoint;
-					PlayNiagaraEffect(particlePoint, HitCharacter);
+					PlayNiagaraEffect(particlePoint, HitCharacter, true);
 					UGameplayStatics::GetPlayerController(GetWorld(), 0)->ClientStartCameraShake(MeleeCamShake);
 					UAnimInstance *Anim = HitCharacter->GetMesh()->GetAnimInstance();
 					if (Anim)

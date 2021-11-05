@@ -193,13 +193,19 @@ public:
 	UAnimMontage *HitReactMontage;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void PlayNiagaraEffect(FVector EffectPoint, ASCharacter *HitCharacter);
+	void PlayNiagaraEffect(FVector EffectPoint, ASCharacter *HitCharacter, bool isMe);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<UCameraShakeBase> MeleeCamShake;
 
 	UFUNCTION(BlueprintCallable)
 	void SetZoneDamage(int32 round);
+
+	UFUNCTION()
+	void RemoveGameUI();
+
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	bool bVictory = false;
 
 private:
 	ClientSocket	*Socket;

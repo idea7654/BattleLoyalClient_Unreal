@@ -110,6 +110,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartSign();
+
+	UFUNCTION()
+	void ToLobby();
 private:
 	ClientSocket	*Socket;
 };

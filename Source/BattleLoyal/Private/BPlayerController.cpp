@@ -306,6 +306,24 @@ void ABPlayerController::GetPacket()
 					chara->SetDie();
 					removeCharacter = chara;
 					chara->SetGameOver();
+					
+					if (targetNick == Socket->Nickname)
+					{
+						FTimerHandle WaitHandle;
+						float WaitTime = 3.0f; //시간을 설정하고
+						GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+						{
+							chara->RemoveGameUI();
+
+							FLatentActionInfo info;
+							info.CallbackTarget = this;
+							info.ExecutionFunction = FName("ToLobby");
+							info.UUID = 0;
+							info.Linkage = 0;
+
+							UGameplayStatics::UnloadStreamLevel(GetWorld(), "GameLevel", info, true);
+						}), WaitTime, false);
+					}
 				}
 
 				if (userNick == "Zone")
@@ -339,9 +357,27 @@ void ABPlayerController::GetPacket()
 			{
 				if (chara->GetName() == FString(userNick.c_str()))
 				{
-					chara->SetVictory();
+					if (!chara->bVictory)
+					{
+						chara->SetVictory();
+						FTimerHandle WaitHandle;
+						float WaitTime = 5.0f; //시간을 설정하고
+						GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+							{
+								FLatentActionInfo info;
+								info.CallbackTarget = this;
+								info.ExecutionFunction = FName("ToLobby");
+								info.UUID = 0;
+								info.Linkage = 0;
+
+								chara->RemoveGameUI();
+
+								UGameplayStatics::UnloadStreamLevel(GetWorld(), "GameLevel", info, true);
+							}), WaitTime, false);
+					}
 				}
 			}
+
 			break;
 		}
 		case MESSAGE_ID::MESSAGE_ID_S2C_MELEE_ATTACK:
@@ -351,6 +387,8 @@ void ABPlayerController::GetPacket()
 			std::string target = RecvData->target()->c_str();
 			float damage = RecvData->damage();
 			int32 combo = RecvData->combo();
+
+			ASCharacter *Attacker = nullptr;
 
 			for (auto &chara : Characters)
 			{
@@ -363,6 +401,7 @@ void ABPlayerController::GetPacket()
 						else
 							chara->CurrentCombo = combo - 1;
 
+						Attacker = chara;
 						//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Combo: %d"), chara->CurrentCombo));
 						chara->PlayAttack(false);
 					}
@@ -374,6 +413,19 @@ void ABPlayerController::GetPacket()
 					}
 				}
 			}
+
+			if (userNick != Socket->Nickname)
+			{
+				for (auto &chara : Characters)
+				{
+					if (Socket->Nickname == target && chara->GetName() == FString(target.c_str()))
+					{
+						chara->PlayNiagaraEffect(chara->GetActorLocation(), Attacker, false);
+						break;
+					}
+				}
+			}
+			
 			break;
 		}
 		case MESSAGE_ID::MESSAGE_ID_S2C_EQUIP_GUN:
@@ -502,6 +554,8 @@ void ABPlayerController::GetPacket()
 					i->HealthAmount += 20;
 					if (i->HealthAmount > 100)
 						i->HealthAmount = 100;
+					i->SetHPUI();
+					break;
 				}
 			}
 			break;
@@ -600,4 +654,30 @@ void ABPlayerController::SetMyPos(int32 Section)
 	int32 size = 0;
 	auto packet = Socket->WRITE_PU_C2S_SET_USER_POSITION(size, Section);
 	Socket->WriteTo(packet, size);
+}
+
+void ABPlayerController::ToLobby()
+{
+	FLatentActionInfo info;
+	UGameplayStatics::LoadStreamLevel(GetWorld(), "Lobby_Sample", true, false, info);
+	ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), "Lobby_Sample");
+	Socket->players.Empty();
+	Socket->Guns.Empty();
+	Socket->Recovers.Empty();
+	for (auto &i : Characters)
+	{
+		i->Destroy();
+	}
+	Characters.Empty();
+	for (auto &i : Guns)
+	{
+		i->Destroy();
+	}
+	Guns.Empty();
+	for (auto &i : Recovers)
+	{
+		i->Destroy();
+	}
+	Recovers.Empty();
+	Socket->isMatching = false;
 }
